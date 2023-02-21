@@ -15,6 +15,8 @@ Reference Papers:
 - [Revisiting ResNets: Improved Training and Scaling Strategies (Irwan Bello et al., 2021)](https://arxiv.org/abs/2103.07579)
 - [SqueezeNext: Hardware-Aware Neural Network Design](https://arxiv.org/abs/1803.10615)
 - [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
+- [ECA-Net: Efficient Channel Attention for Deep Convolutional Neural Networks](https://arxiv.org/abs/1910.03151)
+- [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507)
 
 ## Installation
  

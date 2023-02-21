@@ -13,6 +13,7 @@ Reference Papers:
 - [MobileNetV2: Inverted Residuals and Linear Bottlenecks (Mark Sandler et al., 2018)](https://arxiv.org/abs/1801.04381)
 - [ResNet strikes back: An improved training procedure in timm (Ross Wightman et al., 2021)](https://arxiv.org/abs/2110.00476)
 - [Revisiting ResNets: Improved Training and Scaling Strategies (Irwan Bello et al., 2021)](https://arxiv.org/abs/2103.07579)
+- [SqueezeNext: Hardware-Aware Neural Network Design](https://arxiv.org/pdf/1803.10615.pdf)
 
 
 ## Installation
@@ -33,6 +34,14 @@ ResNet() allows customizing number of channels, bottleneck layers, and number of
 Official pytorch implementation: https://github.com/clovaai/rexnet
 
 ResNet() allows customizing number of channels, bottleneck layers, and number of blocks. 
+
+## Building Blocks ##
+
+1. ConvBlock: Basic convolutional layer followed by batch normalization and activaiton function.
+
+2. BN_Res_Block: Building unit of ResNet, with BottleNeck structure first descirbed in He et al., (2015).  
+
+3. Inverted_BN_Block: Building unit of ReXNet, with a modified version of inverted BottleNeck structure described in Han et al. (2021), originally invented in Snadler et al. (2018).
 
 ### Example
 

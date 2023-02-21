@@ -26,48 +26,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 import json
 from tensorflow import keras
-
-
-def ConvBlock(filters,
-              kernel_size,
-              strides = 1,
-              padding = "same",
-              activation: str = "relu",
-              name = None, 
-              **kwargs):
-    """ 
-    
-    ConvBlock: Base unit of ResNet. keras.layers.Conv2D + BN + activation layers.
-
-    Args: Argument style inherits keras.layers.Conv2D
-        filters (int): # of channels.
-        kernel_size (int): kernel size.
-        strides (int, optional): strides in the Conv2D operation . Defaults to 1.
-        padding (str, optional): padding in the Conv2D operation. Defaults to "same".
-        activation (str, optional): name of the activation function. keras.layers.Activation. Defaults to "relu".
-        name (str, optional): name of the layer. Defaults to None.
-        
-    """
-    if name is None: # adopted this structure from tf.kera
-        counter = keras.backend.get_uid("conv_")
-        name = f"conv_{counter}"
-      
-    def apply(inputs):
-        x = inputs
-        x = keras.layers.Conv2D(filters = filters,
-                                kernel_size = kernel_size,
-                                padding = padding,
-                                strides = strides,
-                                name = name + "_{}x{}conv_ch{}".format(
-                                    kernel_size, kernel_size, filters),
-                                **kwargs
-                                )(x)
-        x = keras.layers.BatchNormalization(name = name +"_batch_norm")(x)
-        if activation:
-            x = keras.layers.Activation(activation, name = name +"_act")(x)
-        return x
-    
-    return apply
+from ConvNets_keras.building_blocks import *
 
 
 def input_stem(ResNetType = "C",
@@ -112,69 +71,6 @@ def input_stem(ResNetType = "C",
         return x
     
     return apply
-
-def BN_Res_Block( target_channels,
-                  BottleNeck_channels, 
-                 ResNetType = "C",
-                 padding = "same",
-                 downsampling = False,
-                 activation: str = "relu",
-                 name = None):
-    
-    """
-    BN_Res_Block: BottleNeck Residual Block. type A, B, and D
-    """
-    #if target_channels == BottleNeck_channels:
-    #if name is None: # adopted this structure from tf.keras
-    #    counter = keras.backend.get_uid("Residual_")
-    #    name = f"Residual_{counter}"
-    #else:  
-    if name is None: # adopted this structure from tf.keras
-        counter = keras.backend.get_uid("BN_Residual_")
-        name = f"BN_Residual_{counter}"
-    
-    def apply(inputs):
-        prev_channels = inputs.shape[-1]
-    #print(inputs.shape[-1])
-        r = inputs # r for residual
-        skip_connection = inputs 
-        DownSamplingStride = 1
-        #if target_channels == BottleNeck_channels:
-      
-        if prev_channels != target_channels:
-            DownSamplingStride = 2
-            skip_connection = ConvBlock(filters = target_channels,
-                              kernel_size = 1,
-                              padding = padding,
-                              strides = DownSamplingStride,
-                              name = name + "_4"                           
-                              )(skip_connection)
-    
-        r = ConvBlock(filters = BottleNeck_channels,
-                              kernel_size = 1,
-                              padding = padding,
-                              strides = 1,
-                              name = name + "_1"                           
-                              )(r)
-        r = ConvBlock(filters = BottleNeck_channels,
-                              kernel_size = 3,
-                              padding = padding,
-                              strides = DownSamplingStride,
-                              name = name + "_2"                           
-                              )(r)
-        r = ConvBlock(filters = target_channels,
-                              kernel_size = 1,
-                              padding = padding,
-                              strides = 1,
-                              name = name + "_3"                           
-                              )(r)
-
-        x = tf.keras.layers.Add()([skip_connection, r])
-    
-        return x
-
-    return apply
-
 
 def ResNet( classes = 1000,
                 include_top = True,                 

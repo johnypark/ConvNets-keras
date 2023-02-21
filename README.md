@@ -1,6 +1,6 @@
 # ConvNets-keras
 
-Convolution Neural Networks re-implementation in keras
+Practical Re-Implementation of keras
 
 The purpose of this project is to offer flexible customizable options for modern CNNs in keras.
 

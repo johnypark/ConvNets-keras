@@ -38,6 +38,20 @@ ResNet() allows customizing number of channels, bottleneck layers, and number of
 
 Usage example building ResNet-50 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XlDZWoYzNMYNRZnCsTA6exesbn_P85nF?usp=sharing)
 
+``` python
+import ConvNets_keras as cnn
+
+rs50 = cnn.ResNet(classes = 1000,
+                input_shape = (224, 224, 3),
+                N_filters = [256, 512, 1024, 2048],  
+                N_BottleNecks = {256: 64, 512:128, 1024:256, 2048:512},
+                N_blocks = {256:3, 512:4, 1024:6, 2048:3},
+                stem_channels = 64,
+                stem_kernel = 7,
+                ResNetType = "C",
+                pooling = "average",
+                 )
+```
 Result: 
 ```
  BN_Residual_16_2_batch_norm (B  (None, 7, 7, 512)   2048        ['BN_Residual_16_2_3x3conv_ch512[

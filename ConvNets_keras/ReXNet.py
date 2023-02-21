@@ -59,12 +59,10 @@ def ConvBlock(filters,
                                 padding = padding,
                                 strides = strides,
                                 name = name + "_{}x{}conv_ch{}".format(
-                                    kernel_size, kernel_size, filters),
-                                **kwargs
+                                    kernel_size, kernel_size, filters)
                                 )(x)
         x = keras.layers.BatchNormalization(name = name +"_batch_norm")(x)
-        if activation:
-            x = keras.layers.Activation(activation, name = name +"_act")(x)
+        x = keras.layers.Activation(activation, name = name +"_act")(x)
         return x
     
     return apply

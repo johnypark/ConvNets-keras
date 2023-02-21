@@ -4,8 +4,6 @@ Convolution Neural Networks re-implementation in keras
 
 The purpose of this project is flexible options to customize modern CNNs in keras.
 
-For example, ResNet() allows customizing number of channels, bottleneck layers, and number of blocks. 
-
 ## Installation
  
 ```
@@ -14,7 +12,12 @@ For example, ResNet() allows customizing number of channels, bottleneck layers, 
 
 ```
 
-## Example
+## ResNet
+
+ResNet() allows customizing number of channels, bottleneck layers, and number of blocks. 
+
+
+### Example
 
 Usage example building ResNet-50 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XlDZWoYzNMYNRZnCsTA6exesbn_P85nF?usp=sharing)
 

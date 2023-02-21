@@ -3,4 +3,4 @@ import tensorflow_addons as tfa
 
 
 ##DATALOADER 
-from CNNs.ResNet import *
+from ConvNets_keras.ResNet import *

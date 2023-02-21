@@ -2,7 +2,7 @@
 
 Convolution Neural Networks re-implementation in keras
 
-The purpose of this project is to offer flexible options to customize modern CNNs in keras.
+The purpose of this project is to offer flexible customizable options for modern CNNs in keras.
 
 Reference Papers:
 - [Deep Residual Learning for Image Recognition (Kaiming He et al., 2015)](https://arxiv.org/abs/1512.03385)

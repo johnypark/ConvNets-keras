@@ -1,6 +1,6 @@
 # ConvNets-keras
 
-CNNs - Practical keras Re(sometimes)-implementations
+Keras Reimplementations of CNNs. 
 
 The purpose of this project is to offer flexible customizable options for modern CNNs in keras.
 
@@ -55,9 +55,9 @@ ResNet() allows customizing number of channels, bottleneck layers, and number of
 Usage example building ResNet-50 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XlDZWoYzNMYNRZnCsTA6exesbn_P85nF?usp=sharing)
 
 ``` python
-import ConvNets_keras as cnn
+import ConvNets_keras as krc
 
-rs50 = cnn.ResNet(classes = 1000,
+rs50 = krc.ResNet(classes = 1000,
                 input_shape = (224, 224, 3),
                 N_filters = [256, 512, 1024, 2048],  
                 N_BottleNecks = {256: 64, 512:128, 1024:256, 2048:512},

@@ -1,18 +1,24 @@
 # ConvNets-keras
-Convolution Neural Networks implementation in keras
 
-Usage example building ResNet-50 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XlDZWoYzNMYNRZnCsTA6exesbn_P85nF?usp=sharing)
+Convolution Neural Networks re-implementation in keras
 
+The purpose of this project is flexible options to customize modern CNNs in keras.
 
-The purpose of this project is to implement modern CNNs in keras.
+For example, ResNet() allows customizing number of channels, bottleneck layers, and number of blocks. 
 
+## Installation
  
- ```
+```
  
  pip install git+https://github.com/johnypark/ConvNets-keras@main
 
- ```
- 
+```
+
+## Example
+
+Usage example building ResNet-50 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XlDZWoYzNMYNRZnCsTA6exesbn_P85nF?usp=sharing)
+
+Result: 
 ```
  BN_Residual_16_2_batch_norm (B  (None, 7, 7, 512)   2048        ['BN_Residual_16_2_3x3conv_ch512[
  atchNormalization)                                              0][0]']                          

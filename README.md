@@ -13,8 +13,8 @@ Reference Papers:
 - [MobileNetV2: Inverted Residuals and Linear Bottlenecks (Mark Sandler et al., 2018)](https://arxiv.org/abs/1801.04381)
 - [ResNet strikes back: An improved training procedure in timm (Ross Wightman et al., 2021)](https://arxiv.org/abs/2110.00476)
 - [Revisiting ResNets: Improved Training and Scaling Strategies (Irwan Bello et al., 2021)](https://arxiv.org/abs/2103.07579)
-- [SqueezeNext: Hardware-Aware Neural Network Design](https://arxiv.org/pdf/1803.10615.pdf)
-
+- [SqueezeNext: Hardware-Aware Neural Network Design](https://arxiv.org/abs/1803.10615)
+- [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
 
 ## Installation
  

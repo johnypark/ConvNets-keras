@@ -5,16 +5,21 @@ Practical Re-Implementation of keras
 The purpose of this project is to offer flexible customizable options for modern CNNs in keras.
 
 Reference Papers:
+1. Residual Blocks and BottleNeck Structure:
 - [Deep Residual Learning for Image Recognition (Kaiming He et al., 2015)](https://arxiv.org/abs/1512.03385)
 - [Bag of Tricks for Image Classification with Convolutional Neural Networks (Tong He et al., 2018)](https://arxiv.org/abs/1812.01187)
 - [Identity Mappings in Deep Residual Networks (Kaiming He et al., 2016)](https://arxiv.org/abs/1603.05027)
 - [ResNeXt: Aggregated Residual Transformations for Deep Neural Networks (Saining Xie et al., 2016)](https://arxiv.org/abs/1611.05431)
 - [ReXNet: Rethinking Channel Dimensions for Efficient Model Design (Dongyoon Han et al., 2021)](https://arxiv.org/abs/2007.00992)
-- [MobileNetV2: Inverted Residuals and Linear Bottlenecks (Mark Sandler et al., 2018)](https://arxiv.org/abs/1801.04381)
 - [ResNet strikes back: An improved training procedure in timm (Ross Wightman et al., 2021)](https://arxiv.org/abs/2110.00476)
 - [Revisiting ResNets: Improved Training and Scaling Strategies (Irwan Bello et al., 2021)](https://arxiv.org/abs/2103.07579)
-- [SqueezeNext: Hardware-Aware Neural Network Design](https://arxiv.org/abs/1803.10615)
+
+2. Inverted Residual Blocks and Linear BottleNeck
+- [MobileNetV2: Inverted Residuals and Linear Bottlenecks (Mark Sandler et al., 2018)](https://arxiv.org/abs/1801.04381)
 - [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244)
+
+3. Other structures
+- [SqueezeNext: Hardware-Aware Neural Network Design](https://arxiv.org/abs/1803.10615)
 - [ECA-Net: Efficient Channel Attention for Deep Convolutional Neural Networks](https://arxiv.org/abs/1910.03151)
 - [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507)
 

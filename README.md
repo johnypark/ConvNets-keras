@@ -4,6 +4,15 @@ Convolution Neural Networks re-implementation in keras
 
 The purpose of this project is flexible options to customize modern CNNs in keras.
 
+Papers:
+- [Deep Residual Learning for Image Recognition (Kaiming He et al., 2015)](https://arxiv.org/abs/1512.03385)
+- [Bag of Tricks for Image Classification with Convolutional Neural Networks (Tong He et al., 2018)](https://arxiv.org/abs/1812.01187)
+- [Identity Mappings in Deep Residual Networks (Kaiming He et al., 2016)](https://arxiv.org/abs/1603.05027)
+- [ResNeXt: Aggregated Residual Transformations for Deep Neural Networks (Saining Xie et al., 2016)](https://arxiv.org/abs/1611.05431)
+- [ReXNet: Rethinking Channel Dimensions for Efficient Model Design (Dongyoon Han et al., 2021)](https://arxiv.org/abs/2007.00992)
+- [MobileNetV2: Inverted Residuals and Linear Bottlenecks (Mark Sandler et al., 2018)](https://arxiv.org/abs/1801.04381)
+
+
 ## Installation
  
 ```
@@ -18,16 +27,10 @@ ResNet() allows customizing number of channels, bottleneck layers, and number of
 
 
 ## [ReXNet](https://github.com/johnypark/ConvNets-keras/blob/main/ConvNets_keras/ReXNet.py)
-Rethinking Channel Dimensions for Efficient Model Design 
-
-https://arxiv.org/pdf/2007.00992.pdf
 
 Official pytorch implementation: https://github.com/clovaai/rexnet
 
-
-
 ResNet() allows customizing number of channels, bottleneck layers, and number of blocks. 
-
 
 ### Example
 

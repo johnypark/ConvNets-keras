@@ -17,8 +17,11 @@ The purpose of this project is flexible options to customize modern CNNs in kera
 ResNet() allows customizing number of channels, bottleneck layers, and number of blocks. 
 
 
-## ReXNet: Rethinking Channel Dimensions for Efficient Model Design 
+## [ReXNet](https://github.com/johnypark/ConvNets-keras/blob/main/ConvNets_keras/ReXNet.py)
+Rethinking Channel Dimensions for Efficient Model Design 
+
 https://arxiv.org/pdf/2007.00992.pdf
+
 Official pytorch implementation: https://github.com/clovaai/rexnet
 
 

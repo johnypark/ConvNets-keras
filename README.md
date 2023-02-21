@@ -1,6 +1,6 @@
 # ConvNets-keras
 
-Practical Re-Implementation of keras
+CNNs - Practical keras Re(sometimes)-implementations
 
 The purpose of this project is to offer flexible customizable options for modern CNNs in keras.
 

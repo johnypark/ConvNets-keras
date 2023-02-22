@@ -28,11 +28,26 @@ import json
 from tensorflow import keras
 
 
+KERNEL_INIT = {
+    "class_name": "VarianceScaling",
+    "config": {
+        "scale": 2.0,
+        "mode": "fan_out",
+        "distribution": "truncated_normal",
+    }} #from resnet-rs
+
+
 def ConvBlock(filters,
               kernel_size,
               strides = 1,
               padding = "same",
               activation: str = "relu",
+              kernel_initializer = {
+                "class_name": "VarianceScaling",
+                "config": {"scale": 2.0, "mode": "fan_out",
+                           "distribution": "truncated_normal" }}, 
+              bn_momentum = 0,
+              bn_epsilon = 1e-5,
               name = None, 
               **kwargs):
     """ 
@@ -60,9 +75,12 @@ def ConvBlock(filters,
                                 strides = strides,
                                 name = name + "_{}x{}conv_ch{}".format(
                                     kernel_size, kernel_size, filters),
+                                kernel_initializer = kernel_initializer,
                                 **kwargs
                                 )(x)
-        x = keras.layers.BatchNormalization(name = name +"_batch_norm")(x)
+        x = keras.layers.BatchNormalization( momentum = bn_momentum,
+                                             epsilon = bn_epsilon,
+            name = name +"_batch_norm")(x)
         if activation:
             x = keras.layers.Activation(activation, name = name +"_act")(x)
         return x

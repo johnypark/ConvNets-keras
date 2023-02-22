@@ -42,6 +42,7 @@ def ConvBlock(filters,
               strides = 1,
               padding = "same",
               activation: str = "relu",
+              use_bias = False,
               kernel_initializer = {
                 "class_name": "VarianceScaling",
                 "config": {"scale": 2.0, "mode": "fan_out",
@@ -76,6 +77,7 @@ def ConvBlock(filters,
                                 name = name + "_{}x{}conv_ch{}".format(
                                     kernel_size, kernel_size, filters),
                                 kernel_initializer = kernel_initializer,
+                                use_bias = use_bias,
                                 **kwargs
                                 )(x)
         x = keras.layers.BatchNormalization( momentum = bn_momentum,

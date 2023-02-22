@@ -7,7 +7,7 @@ setuptools.setup(
     name="ConvNets-keras", # Replace with your own username
     version="1.0",
     author="John Park",
-    author_email="parkjohnyc@gmail.com",
+    author_email="",
     description="Modern CNNs in keras",
     long_description=long_description,
     long_description_content_type="text/markdown",

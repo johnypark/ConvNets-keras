@@ -46,7 +46,7 @@ def ConvBlock(filters,
                 "class_name": "VarianceScaling",
                 "config": {"scale": 2.0, "mode": "fan_out",
                            "distribution": "truncated_normal" }}, 
-              bn_momentum = 0,
+              bn_momentum = 0.0,
               bn_epsilon = 1e-5,
               name = None, 
               **kwargs):

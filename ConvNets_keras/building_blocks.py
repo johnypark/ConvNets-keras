@@ -104,7 +104,8 @@ def BN_Res_Block( target_channels,
                               kernel_size = 1,
                               padding = padding,
                               strides = DownSamplingStride,
-                              name = name + "_4"                           
+                              name = name + "_4",
+                              activation = None                           
                               )(skip_connection)
     
         r = ConvBlock(filters = BottleNeck_channels,
@@ -123,10 +124,12 @@ def BN_Res_Block( target_channels,
                               kernel_size = 1,
                               padding = padding,
                               strides = 1,
-                              name = name + "_3"                           
+                              name = name + "_3",
+                              activation = None                           
                               )(r)
 
         x = tf.keras.layers.Add()([skip_connection, r])
+        x = keras.layers.Activation(activation, name = name +"_act")(x)
     
         return x
 
@@ -175,6 +178,7 @@ def Inverted_BN_Block(in_channels,
                         strides = 1,
                         activation = act_ftn)(x) 
           x = tf.keras.layers.Add()([skip_connection, x])
+          # add activation layer here? 
           return x
     return apply
 

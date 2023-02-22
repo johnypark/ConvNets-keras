@@ -4,13 +4,14 @@ Training on ResNet-50 in 20 epochs with CLR followed by Leslie Smith yielded 49.
 
 Found that activation layer should be placed after the skip connection in the Residual Blocks. Fixed the issue.
 
-Investigating on the initializers:
+- Investigating on the initializers:
 
-<Convolution Layer initialization>
+1. Convolution Layer initialization
 
 Currently using default settings for convolution layer initiailzer. ResNet50 uses default, ResNet-RS usees VarianceScaling. He_Normal seems to be universal in other codes.
 
-keras ResNet-RS uses VarianceScaling initilizer:
+1.1. keras ResNet-RS uses VarianceScaling initilizer:
+
 https://github.com/keras-team/keras/blob/e6784e4302c7b8cd116b74a784f4b78d60e83c26/keras/applications/resnet_rs.py#L123
 
 Settings:
@@ -24,10 +25,12 @@ CONV_KERNEL_INITIALIZER = {
     },
 }
 ```
-keras ResNet-50 uses default initilizer:
+1.2. keras ResNet-50 uses default initilizer:
+
 https://github.com/keras-team/keras/blob/v2.11.0/keras/applications/resnet.py#L245
 
-<Batch Normalization settings>
+2. Batch Normalization settings
+
 ResNet50:
 epsilon = 1.001e-5,
 axis = 3 or 1 

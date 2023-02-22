@@ -25,6 +25,7 @@ Reference Papers:
 
 4. Initialization
 - [Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification](https://arxiv.org/abs/1502.01852): HeNormal
+- [How Does Batch Normalization Help Optimization?](https://arxiv.org/abs/1805.11604)
 ## Installation
  
 ```

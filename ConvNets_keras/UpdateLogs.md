@@ -4,7 +4,7 @@ Training on ResNet-50 in 20 epochs with CLR followed by Leslie Smith yielded 49.
 
 Found that activation layer should be placed after the skip connection in the Residual Blocks. Fixed the issue.
 
-- Investigating on the initializers:
+- Investigating on the initializers: Updated them to ResNet-RS settings.
 
 1. Convolution Layer initialization
 

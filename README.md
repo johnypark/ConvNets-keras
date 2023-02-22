@@ -23,6 +23,9 @@ Reference Papers:
 - [ECA-Net: Efficient Channel Attention for Deep Convolutional Neural Networks](https://arxiv.org/abs/1910.03151)
 - [Squeeze-and-Excitation Networks](https://arxiv.org/abs/1709.01507)
 
+4. Initialization
+- [Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification](https://arxiv.org/abs/1502.01852): HeNormal
+- [How Does Batch Normalization Help Optimization?](https://arxiv.org/abs/1805.11604)
 ## Installation
  
 ```

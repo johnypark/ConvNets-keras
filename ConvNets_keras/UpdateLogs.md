@@ -6,7 +6,7 @@ Found that activation layer should be placed after the skip connection in the Re
 
 - Investigating on the initializers: Updated them to ResNet-RS settings.
 
-1. Convolution Layer initialization
+1. Convolution Layer initialization: https://www.tensorflow.org/api_docs/python/tf/keras/initializers
 
 Currently using default settings for convolution layer initiailzer. ResNet50 uses default, ResNet-RS usees VarianceScaling. He_Normal seems to be universal in other codes.
 

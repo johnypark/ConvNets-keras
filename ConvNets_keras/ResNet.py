@@ -108,7 +108,7 @@ def ResNet50(classes = 1000,
 
     return ResNet(classes = classes,
                 input_shape = input_shape,
-                include_top = include_top
+                include_top = include_top,
                 N_filters = [256, 512, 1024, 2048],  
                 N_BottleNecks = {256: 64, 512:128, 1024:256, 2048:512},
                 N_blocks = {256:3, 512:4, 1024:6, 2048:3},

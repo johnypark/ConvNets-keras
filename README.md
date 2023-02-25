@@ -4,6 +4,8 @@ CNNs Reimplementations in keras
 
 The purpose of this project is to offer flexible customizable options for modern CNNs in keras.
 
+Another problem statement is to suggest best practices for training ConvNets with limited amount of resources. For example, (Bello et al., 2021) showed differential strengths of variable layer settings when trainig length is considered as the optimizing variable. Likewise, some ConvNets may work better for certain training regime that are constrained by resource availability --- Wider and shorter ResNets may work better when training for shorter time than deeper ResNets.
+
 Reference Papers:
 1. Residual Blocks and BottleNeck Structure:
 - [Deep Residual Learning for Image Recognition (Kaiming He et al., 2015)](https://arxiv.org/abs/1512.03385)
@@ -26,6 +28,13 @@ Reference Papers:
 4. Initialization
 - [Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet Classification](https://arxiv.org/abs/1502.01852): HeNormal
 - [How Does Batch Normalization Help Optimization?](https://arxiv.org/abs/1805.11604)
+
+5. Compact ConvNets
+- [MobileViT: Light-weight, General_purpose, and Mobile-friendly Vision Transformer](https://arxiv.org/abs/2110.02178)
+- [Separable Self-attention for Mobile Vision Transformers](https://arxiv.org/abs/2206.02680)
+- [Escaping the Big Data Paradigm with Compact Transformers](https://arxiv.org/abs/2104.05704)
+
+
 ## Installation
  
 ```

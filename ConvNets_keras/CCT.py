@@ -25,7 +25,6 @@ projection_dim = 128
 settings['hidden_units'] = [128, 128]
 
 
-
 def CCT_tokenizer( 
               strides, 
               kernel_size,
@@ -90,15 +89,16 @@ def cct(settings):
     CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
     """
     
-	input = tf.keras.layers.Input(
-		(None, None, 3), 
-		name = 'input'
-	)
-	x = input
-	x = CCT_tokenizer(x)
- 
-	if settings['positionalEmbedding']:
-		embedding = tf.random.truncated_normal(
+    input = tf.keras.layers.Input(
+		shape = (None, None, 3), 
+		name = 'input')
+    
+    x = input
+    x = CCT_tokenizer(x)
+    
+    if settings['positionalEmbedding']:
+        
+        embedding = tf.random.truncated_normal(
 			shape = (x.shape.as_list()[1], x.shape.as_list()[2]),
 			mean = 0.0,
 			stddev = settings['std_embedding'],
@@ -107,38 +107,43 @@ def cct(settings):
                          settings['randomMax']),
 			name = 'learnable_embedding'
 		)
-		x = tf.math.add(x, embedding) # maybe change this to layer add?
-		x = tf.keras.layers.Dropout(settings['dropout'])(x)
-	dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
+        
+        x = tf.math.add(x, embedding) # maybe change this to layer add?
+        x = tf.keras.layers.Dropout(settings['dropout'])(x)
+
+    ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers
-	for k in range(settings['transformerLayers']):
-		att = tf.keras.layers.LayerNormalization(
+    for k in range(settings['transformerLayers']):
+        
+        att = tf.keras.layers.LayerNormalization(
 			epsilon = settings['epsilon'],
 			name = f"transformer_{k}_norm"
 		)(x)
-  
-		att = keras.layers.MultiHeadAttention(
+        
+        att = keras.layers.MultiHeadAttention(
 			num_heads = settings['heads'], 
             #key_dim = ,
             dropout = 0.1,
 			name = f"transformer_{k}_attention"
 		)(att, att)
-		x = tf.keras.layers.Add()([att, x])
-		x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
-		mlp_out = MLP_block( num_hidden_channels = settings['hidden_units'],
+        x = tf.keras.layers.Add()([att, x])
+        x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
+        mlp_out = MLP_block( num_hidden_channels = settings['hidden_units'],
                       DropOut = 0.1, 
 			name = f"transformer_{k}_mlp"
 		)(x)
 		#if settings['stochasticDepth']:
 		#	recoder = StochasticDepth(dpr[k])(recoder)
-		x = tf.keras.layers.Add()([mlp_out, x])
+    
+    x = tf.keras.layers.Add()([mlp_out, x])
   
     #### Sequence Pooling ####
-	x = tf.keras.layers.LayerNormalization(
+    x = tf.keras.layers.LayerNormalization(
 		epsilon = settings['epsilon'],
 		name = 'final_norm'
 	)(x)
-	x = tf.squeeze( # why squeeze???
+    
+    x = tf.squeeze( # why squeeze???
 		axis = -2,
 		input = tf.matmul(
 			a = tf.keras.layers.Dense(
@@ -160,7 +165,8 @@ def cct(settings):
 		),
 		name = 'squeeze'
 	)
-	output = tf.keras.layers.Dense(
+    
+    output = tf.keras.layers.Dense(
 		activation = None,
 		activity_regularizer = None,
 		bias_constraint = None,
@@ -173,4 +179,5 @@ def cct(settings):
 		units = settings['classes'],
 		use_bias = True
 	)(x)
-	return tf.keras.Model(inputs = input, outputs = output)
+    
+    return tf.keras.Model(inputs = input, outputs = output)

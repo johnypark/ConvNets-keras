@@ -23,7 +23,8 @@ settings['transformerLayers'] = 2
 settings['epsilon'] = 1e-6
 projection_dim = 128
 settings['hidden_units'] = [128, 128]
-
+settings['denseInitializer'] = 'glorot_uniform'
+settings['heads'] = 2
 
 def CCT_tokenizer( 
               strides, 
@@ -81,13 +82,74 @@ def MLP_block(num_hidden_channels,
         return x
     return apply
 
+def SeqPool(num_classes, settings): # Learnable pooling layer
+    
+    def apply(inputs):
+        x = inputs    
+        x = tf.keras.layers.LayerNormalization(
+            epsilon = settings['epsilon'],
+            name = 'final_norm'
+        )(x)
+        
+        x = tf.squeeze( # why squeeze???
+            axis = -2,
+            input = tf.matmul(
+                a = tf.keras.layers.Dense(
+                    activation = 'softmax',
+                    activity_regularizer = None,
+                    bias_constraint = None,
+                    bias_initializer = 'zeros',
+                    bias_regularizer = None,
+                    kernel_constraint = None,
+                    kernel_initializer = settings['denseInitializer'],
+                    kernel_regularizer = None,
+                    name = 'weight',
+                    units = 1,
+                    use_bias = True
+                )(x),
+                b = x, 
+                name = 'apply_weight',
+                transpose_a = True
+            ),
+            name = 'squeeze'
+        )
+        
+        output = tf.keras.layers.Dense(
+            activation = None,
+            activity_regularizer = None,
+            bias_constraint = None,
+            bias_initializer = 'zeros',
+            bias_regularizer = None,
+            kernel_constraint = None,
+            kernel_initializer = settings['denseInitializer'],
+            kernel_regularizer = None,
+            name = 'output',
+            units = num_classes,
+            use_bias = True
+        )(x)
+
+        return output
+
+    return apply
+        
+
 ### CCT MODEL
-def cct(settings):
+def cct(classes, 
+        num_heads = 2,
+        num_transformer_layers = 2,
+        settings = settings,
+        positional_embedding = True):
 
     """ CCT-L/PxP: L transformer encoder layers and PxP patch size.
     In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
     CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
     """
+    # image_size 
+    # input_shape
+    # num_heads
+    # projection_dim
+    # transformer_units
+    # settings 
     
     input = tf.keras.layers.Input(
 		shape = (None, None, 3), 
@@ -96,7 +158,7 @@ def cct(settings):
     x = input
     x = CCT_tokenizer(x)
     
-    if settings['positionalEmbedding']:
+    if positional_embedding:
         
         embedding = tf.random.truncated_normal(
 			shape = (x.shape.as_list()[1], x.shape.as_list()[2]),
@@ -113,7 +175,7 @@ def cct(settings):
 
     ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers
-    for k in range(settings['transformerLayers']):
+    for k in range(num_transformer_layers):
         
         att = tf.keras.layers.LayerNormalization(
 			epsilon = settings['epsilon'],
@@ -121,7 +183,7 @@ def cct(settings):
 		)(x)
         
         att = keras.layers.MultiHeadAttention(
-			num_heads = settings['heads'], 
+			num_heads = num_heads, 
             #key_dim = ,
             dropout = 0.1,
 			name = f"transformer_{k}_attention"
@@ -138,46 +200,8 @@ def cct(settings):
     x = tf.keras.layers.Add()([mlp_out, x])
   
     #### Sequence Pooling ####
-    x = tf.keras.layers.LayerNormalization(
-		epsilon = settings['epsilon'],
-		name = 'final_norm'
-	)(x)
     
-    x = tf.squeeze( # why squeeze???
-		axis = -2,
-		input = tf.matmul(
-			a = tf.keras.layers.Dense(
-				activation = 'softmax',
-				activity_regularizer = None,
-				bias_constraint = None,
-				bias_initializer = 'zeros',
-				bias_regularizer = None,
-				kernel_constraint = None,
-				kernel_initializer = settings['denseInitializer'],
-				kernel_regularizer = None,
-				name = 'weight',
-				units = 1,
-				use_bias = True
-			)(x),
-			b = x, 
-			name = 'apply_weight',
-			transpose_a = True
-		),
-		name = 'squeeze'
-	)
-    
-    output = tf.keras.layers.Dense(
-		activation = None,
-		activity_regularizer = None,
-		bias_constraint = None,
-		bias_initializer = 'zeros',
-		bias_regularizer = None,
-		kernel_constraint = None,
-		kernel_initializer = settings['denseInitializer'],
-		kernel_regularizer = None,
-		name = 'output',
-		units = settings['classes'],
-		use_bias = True
-	)(x)
+    output = SeqPool(num_classes = classes,
+                     settings = settings)(x)
     
     return tf.keras.Model(inputs = input, outputs = output)

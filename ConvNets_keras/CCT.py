@@ -22,7 +22,6 @@ settings['dropout'] = 0.1
 settings['transformerLayers'] = 2
 settings['epsilon'] = 1e-6
 projection_dim = 128
-settings['hidden_units'] = [128, 128]
 settings['denseInitializer'] = 'glorot_uniform'
 settings['heads'] = 2
 
@@ -82,7 +81,8 @@ def MLP_block(num_hidden_channels,
         return x
     return apply
 
-def SeqPool(num_classes, settings): # Learnable pooling layer
+def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they tested static pooling methods but leanrable weighting is more effcient
+    # because each embedded patch does not contain the same amount of entropy. Enables the model to apply weights to tokens with repsect to the relevance of their information
     
     def apply(inputs):
         x = inputs    
@@ -135,7 +135,9 @@ def SeqPool(num_classes, settings): # Learnable pooling layer
 
 ### CCT MODEL
 def cct(classes, 
+        input_shape = (None, None, 3),
         num_heads = 2,
+        projection_dim = 128,
         num_transformer_layers = 2,
         settings = settings,
         positional_embedding = True):
@@ -144,15 +146,9 @@ def cct(classes,
     In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
     CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
     """
-    # image_size 
-    # input_shape
-    # num_heads
-    # projection_dim
-    # transformer_units
-    # settings 
     
     input = tf.keras.layers.Input(
-		shape = (None, None, 3), 
+		shape = input_shape, 
 		name = 'input')
     
     x = input
@@ -184,13 +180,13 @@ def cct(classes,
         
         att = keras.layers.MultiHeadAttention(
 			num_heads = num_heads, 
-            #key_dim = ,
+            key_dim = projection_dim,
             dropout = 0.1,
 			name = f"transformer_{k}_attention"
 		)(att, att)
         x = tf.keras.layers.Add()([att, x])
         x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
-        mlp_out = MLP_block( num_hidden_channels = settings['hidden_units'],
+        mlp_out = MLP_block( num_hidden_channels = [projection_dim, projection_dim],
                       DropOut = 0.1, 
 			name = f"transformer_{k}_mlp"
 		)(x)

@@ -1,3 +1,12 @@
+2/25/2023
+
+Testing wider layer ResNet.
+
+Increasing to 60 epochs basically have same validation Top-1 Acc. (63%)
+
+Training ResNet-50 in 20 epochs yielded 63% on validation Top-1 Acc, with mLR = 0.1 and WD = 1e-4
+
+
 2/21/2023
 
 Training on ResNet-50 in 20 epochs with CLR followed by Leslie Smith yielded 49.85 on validation F1. Training F1:55.90. Note that it is not Top-1 acc, so it underestimates the acc. 

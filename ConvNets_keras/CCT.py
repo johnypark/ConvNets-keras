@@ -177,7 +177,7 @@ def cct(classes,
 		)
         
         x = tf.math.add(x, embedding) # maybe change this to layer add?
-        x = tf.keras.layers.Dropout(settings['dropout'])(x)
+    x = tf.keras.layers.Dropout(settings['dropout'])(x)
 
     ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers

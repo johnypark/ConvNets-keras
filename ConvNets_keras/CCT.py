@@ -19,6 +19,11 @@ settings['std_embedding'] = 0.2
 settings['randomMax'] = 2**32 ### 64 is unsafe (53 is max safe)
 settings['randomMin'] = 0
 settings['dropout'] = 0.1
+settings['transformerLayers'] = 2
+settings['epsilon'] = 1e-6
+projection_dim = 128
+settings['hidden_units'] = [128, 128]
+
 
 
 def CCT_tokenizer( 
@@ -26,8 +31,8 @@ def CCT_tokenizer(
               kernel_size,
               pool_size,
               pooling_stride,
-              activation,
               kernel_initializer,
+              activation,
               out_channels = [64, 128], 
               name = None,
               padding = 'same',
@@ -56,11 +61,26 @@ def CCT_tokenizer(
         strides = pooling_stride 
       )(x)
     x =  tf.reshape(name = name+'reshape_1',
-                      shape = (-1, x.shape.as_list()[1]*x.shape.as_list()[2], x.shape.as_list()[3]),
+                      shape = (-1, tf.shape(x)[1]*tf.shape(x)[2], tf.shape(x)[3]),
                       tensor = x)
     return x
 
   return apply
+
+def MLP_block(num_hidden_channels,
+              DropOut,
+              activation = 'gelu',
+              name = None):
+    
+    def apply(inputs):
+        x = inputs
+        for hidden_channel in num_hidden_channels:
+            x = keras.layers.Conv2D(filter = hidden_channel,
+                                    kernel_size = 1)(x)
+            x = keras.layers.Activation(activation)(x)
+            x = keras.layers.Dropout(dropout_rate = DropOut)(x)
+        return x
+    return apply
 
 ### CCT MODEL
 def cct(settings):
@@ -76,6 +96,7 @@ def cct(settings):
 	)
 	x = input
 	x = CCT_tokenizer(x)
+ 
 	if settings['positionalEmbedding']:
 		embedding = tf.random.truncated_normal(
 			shape = (x.shape.as_list()[1], x.shape.as_list()[2]),
@@ -91,29 +112,33 @@ def cct(settings):
 	dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers
 	for k in range(settings['transformerLayers']):
-		attention = tf.keras.layers.LayerNormalization(
+		att = tf.keras.layers.LayerNormalization(
 			epsilon = settings['epsilon'],
 			name = f"transformer_{k}_norm"
-		)(cct)
-		attention = selfAttention(
-			attention, 
-			heads = settings['heads'], 
+		)(x)
+  
+		att = keras.layers.MultiHeadAttention(
+			num_heads = settings['heads'], 
+            #key_dim = ,
+            dropout = 0.1,
 			name = f"transformer_{k}_attention"
-		)
-		cct = tf.keras.layers.Add()([attention, cct])
-		recoder = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(cct)
-		recoder = mlpEncode(
-			recoder, 
+		)(att, att)
+		x = tf.keras.layers.Add()([att, x])
+		x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
+		mlp_out = MLP_block( num_hidden_channels = settings['hidden_units'],
+                      DropOut = 0.1, 
 			name = f"transformer_{k}_mlp"
-		)
-		if settings['stochasticDepth']:
-			recoder = StochasticDepth(dpr[k])(recoder)
-		cct = tf.keras.layers.Add()([recoder, cct])
-	cct = tf.keras.layers.LayerNormalization(
+		)(x)
+		#if settings['stochasticDepth']:
+		#	recoder = StochasticDepth(dpr[k])(recoder)
+		x = tf.keras.layers.Add()([mlp_out, x])
+  
+    #### Sequence Pooling ####
+	x = tf.keras.layers.LayerNormalization(
 		epsilon = settings['epsilon'],
 		name = 'final_norm'
-	)(cct)
-	cct = tf.squeeze(
+	)(x)
+	x = tf.squeeze( # why squeeze???
 		axis = -2,
 		input = tf.matmul(
 			a = tf.keras.layers.Dense(
@@ -128,8 +153,8 @@ def cct(settings):
 				name = 'weight',
 				units = 1,
 				use_bias = True
-			)(cct),
-			b = cct, 
+			)(x),
+			b = x, 
 			name = 'apply_weight',
 			transpose_a = True
 		),
@@ -147,5 +172,5 @@ def cct(settings):
 		name = 'output',
 		units = settings['classes'],
 		use_bias = True
-	)(cct)
+	)(x)
 	return tf.keras.Model(inputs = input, outputs = output)

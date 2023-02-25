@@ -1,6 +1,8 @@
 # CCT: Escaping the Big Data Paradigm with Compact Transformers
 # Paper: https://arxiv.org/pdf/2104.05704.pdf
-# CCT-L/PxP: L transformer encoder layers and PxP patch size.
+# CCT-L/PxT: 
+# L transformer encoder layers 
+# T-layer convolutional tokenizer with PxP kernel size.
 # In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
 # CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
 
@@ -19,13 +21,14 @@ settings['randomMin'] = 0
 settings['dropout'] = 0.1
 
 
-def CCT_tokenizer(out_channels, 
-              activation,
-              kernel_initializer,
-              kernel_size,
+def CCT_tokenizer( 
               strides, 
+              kernel_size,
               pool_size,
               pooling_stride,
+              activation,
+              kernel_initializer,
+              out_channels = [64, 128], 
               name = None,
               padding = 'same',
               use_bias = False,
@@ -33,10 +36,11 @@ def CCT_tokenizer(out_channels,
   
   def apply(inputs):
     x = inputs
-    for k in range(0, len(out_channels)):
+    num_conv_tokenizers = len(out_channels)
+    for k in range(num_conv_tokenizers):
       x = keras.layers.Conv2D(
         activation = activation,
-        filters = out_channels,
+        filters = out_channels[k],
         kernel_initializer = kernel_initializer,
         kernel_size = kernel_size,
         name = name,

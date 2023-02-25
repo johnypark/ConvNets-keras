@@ -1,15 +1,21 @@
 2/25/2023
 
-Testing wider layer ResNet.
+Testing wider layer ResNet with lower resolution.
+
+ResNet-50-Wide with 2x larger layer takes 14.5 miutes to train one epoch.
 
 Increasing to 60 epochs basically have same validation Top-1 Acc. (63%)
 
-Training ResNet-50 in 20 epochs yielded 63% on validation Top-1 Acc, with mLR = 0.1 and WD = 1e-4
+Training ResNet-50 in 224x224 resol 20 epochs yielded 63% on validation Top-1 Acc, with mLR = 0.1 and WD = 1e-4.
+
+It takes 16 minutes to train one epoch.
 
 
 2/21/2023
 
-Training on ResNet-50 in 20 epochs with CLR followed by Leslie Smith yielded 49.85 on validation F1. Training F1:55.90. Note that it is not Top-1 acc, so it underestimates the acc. 
+Training on ResNet-50 160x160 resol in 20 epochs with CLR followed by Leslie Smith yielded 49.85 on validation F1. Training F1:55.90. Note that it is not Top-1 acc, so it underestimates the acc. 
+
+It took 5-6 minutes to train one epoch.
 
 Found that activation layer should be placed after the skip connection in the Residual Blocks. Fixed the issue.
 

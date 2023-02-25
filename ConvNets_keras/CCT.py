@@ -24,6 +24,7 @@ settings['epsilon'] = 1e-6
 projection_dim = 128
 settings['denseInitializer'] = 'glorot_uniform'
 settings['heads'] = 2
+settings['conv2DInitializer'] = 'he_normal'
 
 def CCT_tokenizer( 
               strides, 
@@ -138,21 +139,30 @@ def cct(classes,
         input_shape = (None, None, 3),
         num_heads = 2,
         projection_dim = 128,
-        num_transformer_layers = 2,
+        L_num_transformer_layers = 7,
+        P_patch_size = 3,
+        T_num_tokenizer_layers = 2,
         settings = settings,
         positional_embedding = True):
 
-    """ CCT-L/PxP: L transformer encoder layers and PxP patch size.
+    """ CCT-L/PxT: L transformer encoder layers and PxP patch size.
     In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
     CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
     """
     
+    # Need to add tokenizer settings
     input = tf.keras.layers.Input(
 		shape = input_shape, 
 		name = 'input')
     
     x = input
-    x = CCT_tokenizer(x)
+    x = CCT_tokenizer(strides = 1, 
+              kernel_size = P_patch_size,
+              pool_size = P_patch_size,
+              pooling_stride = (P_patch_size-1),
+              kernel_initializer = settings['conv2DInitializer'],
+              activation = 'relu',
+              out_channels = [64, 128])(x)
     
     if positional_embedding:
         
@@ -171,7 +181,7 @@ def cct(classes,
 
     ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers
-    for k in range(num_transformer_layers):
+    for k in range(L_num_transformer_layers):
         
         att = tf.keras.layers.LayerNormalization(
 			epsilon = settings['epsilon'],

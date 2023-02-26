@@ -254,7 +254,7 @@ def CCT(classes,
         #x = tf.reshape(shape = (-1, tf.shape(x)[2], tf.shape(x)[1]),
         #              tensor = x)
         x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
-        mlp_out = MLP_block(embedding_dim = embedding_dim,
+        mlp_out = MLP_block(embedding_dim = projection_dims,
                             mlp_ratio = mlp_ratio,
                       DropOut = DropOut_rate 
 		)(x)

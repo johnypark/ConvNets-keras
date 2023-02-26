@@ -1,8 +1,8 @@
 # CCT: Escaping the Big Data Paradigm with Compact Transformers
 # Paper: https://arxiv.org/pdf/2104.05704.pdf
-# CCT-L/PxT: 
-# L transformer encoder layers 
-# T-layer convolutional tokenizer with PxP kernel size.
+# CCT-L/KxT: 
+# K transformer encoder layers 
+# T-layer convolutional tokenizer with KxK kernel size.
 # In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
 # CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
 
@@ -26,10 +26,11 @@ settings['denseInitializer'] = 'glorot_uniform'
 settings['heads'] = 2
 settings['conv2DInitializer'] = 'he_normal'
 
-def CCT_tokenizer(
+def Conv_Tokenizer(
               kernel_size,
-              kernel_initializer,
-              activation,
+              strides = 2, 
+              ##kernel_initializer,
+              activation = 'relu',
               list_embedding_dims = [256], 
               pool_size = 3,
               pooling_stride = 2,
@@ -39,6 +40,9 @@ def CCT_tokenizer(
               **kwargs):
   
   def apply(inputs):
+    #strides = strides if strides is not None else max(1, (kernel_size // 2) - 1)
+    #padding = padding if padding is not None else max(1, (kernel_size // 2))
+    
     x = inputs
     num_conv_tokenizers = len(list_embedding_dims)
     for k in range(num_conv_tokenizers):
@@ -46,19 +50,19 @@ def CCT_tokenizer(
         activation = activation,
         filters = list_embedding_dims[k],
         kernel_size = kernel_size,
-        strides = kernel_size,
-        kernel_initializer = kernel_initializer,
+        strides = strides,
+        #kernel_initializer = kernel_initializer,
         name = name,
         padding = padding,
         use_bias = use_bias,
         **kwargs
       )(x)
       x = keras.layers.MaxPool2D(
-        name = name+"maxpool_1",
+        #name = name+"maxpool_1",
         pool_size = pool_size, 
         strides = pooling_stride 
       )(x)
-    x =  tf.reshape(name = name+'reshape_1',
+    x =  tf.reshape(#name = name+'reshape_1',
                       shape = (-1, tf.shape(x)[1]*tf.shape(x)[2], tf.shape(x)[3]),
                       tensor = x)
     return x
@@ -135,10 +139,12 @@ def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they
 ### CCT MODEL
 def cct(classes, 
         input_shape = (None, None, 3),
-        num_heads = 2,
-        projection_dim = 128,
-        L_num_transformer_layers = 7,
-        P_patch_size = 3,
+        L_num_transformer_layers = 14,
+        num_heads = 6,
+        mlp_ratio = 3,
+        projection_dim = 384,
+        K_kernel_size = 7,
+        conv_tokenizer_strides = 2,
         T_num_tokenizer_layers = 2,
         settings = settings,
         positional_embedding = True):
@@ -154,13 +160,11 @@ def cct(classes,
 		name = 'input')
     
     x = input
-    x = CCT_tokenizer(strides = 1, 
-              kernel_size = P_patch_size,
-              pool_size = P_patch_size,
-              pooling_stride = (P_patch_size-1),
-              kernel_initializer = settings['conv2DInitializer'],
+    x = Conv_Tokenizer(strides = conv_tokenizer_strides, 
+              kernel_size = K_kernel_size,
+              #kernel_initializer = settings['conv2DInitializer'],
               activation = 'relu',
-              out_channels = [64, 128])(x)
+              list_embedding_dims = [projection_dim//2, projection_dim])(x)
     
     if positional_embedding:
         
@@ -183,20 +187,20 @@ def cct(classes,
         
         att = tf.keras.layers.LayerNormalization(
 			epsilon = settings['epsilon'],
-			name = f"transformer_{k}_norm"
+			#name = f"transformer_{k}_norm"
 		)(x)
         
         att = keras.layers.MultiHeadAttention(
 			num_heads = num_heads, 
             key_dim = projection_dim,
             dropout = 0.1,
-			name = f"transformer_{k}_attention"
+			#name = f"transformer_{k}_attention"
 		)(att, att)
         x = tf.keras.layers.Add()([att, x])
         x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
         mlp_out = MLP_block( num_hidden_channels = [projection_dim, projection_dim],
                       DropOut = 0.1, 
-			name = f"transformer_{k}_mlp"
+			#name = f"transformer_{k}_mlp"
 		)(x)
 		#if settings['stochasticDepth']:
 		#	recoder = StochasticDepth(dpr[k])(recoder)

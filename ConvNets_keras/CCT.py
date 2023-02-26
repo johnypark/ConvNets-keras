@@ -259,6 +259,8 @@ def CCT(classes,
                       DropOut = DropOut_rate 
 		)(x)
         x = tf.keras.layers.Add()([mlp_out, x]) # do a stochastic depth layer here 
+        x = tf.reshape(shape = (-1, tf.shape(x)[2], tf.shape(x)[1]),
+                      tensor = x)
 
     #### Sequence Pooling ####
     

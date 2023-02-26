@@ -59,7 +59,8 @@ def Conv_Tokenizer(
       x = keras.layers.MaxPool2D(
         #name = name+"maxpool_1",
         pool_size = pool_size, 
-        strides = pooling_stride 
+        strides = pooling_stride,
+        padding = padding
       )(x)
     x =  tf.reshape(#name = name+'reshape_1',
                       shape = (-1, tf.shape(x)[3], tf.shape(x)[1]*tf.shape(x)[2]),
@@ -67,6 +68,21 @@ def Conv_Tokenizer(
     return x
 
   return apply
+
+
+def get_dim_Conv_Tokenizer(Conv_strides, pool_strides, num_tokenizer_ConvLayers):
+
+  def apply(input):
+
+    start = input
+    for k in range(num_tokenizer_ConvLayers):
+      Conv_out = -(start // -Conv_strides)
+      pool_out = -(Conv_out // - pool_strides)
+      start = pool_out
+    
+    return pool_out
+  return apply
+
 
 def MLP_block(embedding_dim,
               mlp_ratio,
@@ -149,6 +165,8 @@ def CCT(classes,
               kernel_size = tokenizer_kernel_size,
               #kernel_initializer = settings['conv2DInitializer'],
               activation = 'relu',
+              pool_size = 3,
+              pooling_stride = 2,
               list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
     
     if positional_embedding: # this does not work!
@@ -165,8 +183,10 @@ def CCT(classes,
         
         x = tf.math.add(x, embedding) # maybe change this to layer add?
     x = tf.keras.layers.Dropout(settings['dropout'])(x)
-    projection_dims = int(tf.shape(x)[-1].numpy())
-
+    projection_dims = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
+                                             pool_strides = 2, 
+                                             num_tokenizer_ConvLayers = num_tokenizer_ConvLayers)(input_shape[0])
+    
     ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers
     for k in range(num_TransformerLayers):

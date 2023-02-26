@@ -186,7 +186,7 @@ def CCT(classes,
     projection_dims = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
                                              pool_strides = 2, 
                                              num_tokenizer_ConvLayers = num_tokenizer_ConvLayers)(input_shape[0])
-    
+    projection_dims = projection_dims**2
     ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers
     for k in range(num_TransformerLayers):

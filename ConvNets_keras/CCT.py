@@ -76,10 +76,10 @@ def MLP_block(embedding_dim,
     
     def apply(inputs):
         x = inputs
-        x = keras.layers.Dense(unit = int(embedding_dim*mlp_ratio))(x)
+        x = keras.layers.Dense(units = int(embedding_dim*mlp_ratio))(x)
         x = keras.layers.Activation(activation)(x)
         x = keras.layers.Dropout(dropout_rate = DropOut)(x)
-        x = keras.layers.Dense(unit = embedding_dim)(x)
+        x = keras.layers.Dense(units = embedding_dim)(x)
         x = keras.layers.Activation(activation)(x)
         x = keras.layers.Dropout(dropout_rate = DropOut)(x)
         

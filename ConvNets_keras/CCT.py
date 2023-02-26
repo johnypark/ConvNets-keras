@@ -165,6 +165,7 @@ def CCT(classes,
         
         x = tf.math.add(x, embedding) # maybe change this to layer add?
     x = tf.keras.layers.Dropout(settings['dropout'])(x)
+    projection_dims = tf.shape(x)[-1]
 
     ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers
@@ -177,13 +178,13 @@ def CCT(classes,
         
         att = keras.layers.MultiHeadAttention(
 			num_heads = num_heads, 
-            key_dim = embedding_dim,
+            key_dim = projection_dims,
             dropout = DropOut_rate,
 			#name = f"transformer_{k}_attention"
 		)(att, att)
         x = tf.keras.layers.Add()([att, x])
         x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
-        mlp_out = MLP_block(embedding_dim = embedding_dim,
+        mlp_out = MLP_block(embedding_dim = projection_dims,
                             mlp_ratio = mlp_ratio,
                       DropOut = DropOut_rate 
 		)(x)

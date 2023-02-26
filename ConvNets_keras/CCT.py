@@ -69,20 +69,27 @@ def Conv_Tokenizer(
 
   return apply
 
-def MLP_block(num_hidden_channels,
+def MLP_block(embedding_dim,
+              mlp_ratio,
               DropOut,
               activation = 'gelu',
               name = None):
     
     def apply(inputs):
         x = inputs
-        for hidden_channel in num_hidden_channels:
-            x = keras.layers.Conv2D(filter = hidden_channel,
+        x = keras.layers.Conv2D(filter = int(embedding_dim*mlp_ratio),
                                     kernel_size = 1)(x)
-            x = keras.layers.Activation(activation)(x)
-            x = keras.layers.Dropout(dropout_rate = DropOut)(x)
-        return x
+        x = keras.layers.Activation(activation)(x)
+        x = keras.layers.Dropout(dropout_rate = DropOut)(x)
+        x = keras.layers.Conv2D(filter = embedding_dim,
+                                    kernel_size = 1)(x)
+        x = keras.layers.Activation(activation)(x)
+        x = keras.layers.Dropout(dropout_rate = DropOut)(x)
+        
+        return x # here apply stochastic depth layer
+    
     return apply
+
 
 def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they tested static pooling methods but leanrable weighting is more effcient
     # because each embedded patch does not contain the same amount of entropy. Enables the model to apply weights to tokens with repsect to the relevance of their information
@@ -93,30 +100,33 @@ def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they
             epsilon = settings['epsilon'],
             name = 'final_norm'
         )(x)
-        
-        x = tf.squeeze( # why squeeze???
-            axis = -2,
-            input = tf.matmul(
-                a = tf.keras.layers.Dense(
-                    activation = 'softmax',
-                    activity_regularizer = None,
-                    bias_constraint = None,
-                    bias_initializer = 'zeros',
-                    bias_regularizer = None,
-                    kernel_constraint = None,
-                    kernel_initializer = settings['denseInitializer'],
-                    kernel_regularizer = None,
-                    name = 'weight',
-                    units = 1,
-                    use_bias = True
-                )(x),
-                b = x, 
-                name = 'apply_weight',
-                transpose_a = True
-            ),
-            name = 'squeeze'
-        )
-        
+        x_init = x
+        x = tf.keras.layers.Dense(units = 1, activation = 'softmax')(x)
+        x = tf.transpose(x, perm = [0, 2, 1])
+        x = tf.matmul(x, x_init)
+        x = tf.squeeze(x, axis = 1)     
+        #x = tf.squeeze( # why squeeze???
+        #    axis = -2,
+        #    input = tf.matmul(
+        #        a = tf.keras.layers.Dense(
+        #            activation = 'softmax',
+        #            activity_regularizer = None,
+        #            bias_constraint = None,
+        #            bias_initializer = 'zeros',
+        #            bias_regularizer = None,
+        #            kernel_constraint = None,
+        #            kernel_initializer = settings['denseInitializer'],
+        #            kernel_regularizer = None,
+        #            name = 'weight',
+        #            units = 1,
+        #            use_bias = True
+        #        )(x),
+        #        b = x, 
+        #        name = 'apply_weight',
+        #        transpose_a = True
+        #    ),
+        #    name = 'squeeze'
+        #)
         output = tf.keras.layers.Dense(
             activation = None,
             activity_regularizer = None,
@@ -126,7 +136,7 @@ def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they
             kernel_constraint = None,
             kernel_initializer = settings['denseInitializer'],
             kernel_regularizer = None,
-            name = 'output',
+            #name = 'output',
             units = num_classes,
             use_bias = True
         )(x)
@@ -137,7 +147,7 @@ def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they
         
 
 ### CCT MODEL
-def cct(classes, 
+def CCT(classes, 
         input_shape = (None, None, 3),
         L_num_transformer_layers = 14,
         num_heads = 6,
@@ -146,6 +156,7 @@ def cct(classes,
         K_kernel_size = 7,
         conv_tokenizer_strides = 2,
         T_num_tokenizer_layers = 2,
+        DropOut_rate = 0.1,
         settings = settings,
         positional_embedding = True):
 
@@ -153,7 +164,6 @@ def cct(classes,
     In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
     CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
     """
-    
     # Need to add tokenizer settings
     input = tf.keras.layers.Input(
 		shape = input_shape, 
@@ -193,20 +203,18 @@ def cct(classes,
         att = keras.layers.MultiHeadAttention(
 			num_heads = num_heads, 
             key_dim = projection_dim,
-            dropout = 0.1,
+            dropout = DropOut_rate,
 			#name = f"transformer_{k}_attention"
 		)(att, att)
         x = tf.keras.layers.Add()([att, x])
         x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
-        mlp_out = MLP_block( num_hidden_channels = [projection_dim, projection_dim],
-                      DropOut = 0.1, 
+        mlp_out = MLP_block(embedding_dim = projection_dim,
+                            mlp_ratio = mlp_ratio,
+                      DropOut = DropOut_rate 
 			#name = f"transformer_{k}_mlp"
 		)(x)
-		#if settings['stochasticDepth']:
-		#	recoder = StochasticDepth(dpr[k])(recoder)
-    
-    x = tf.keras.layers.Add()([mlp_out, x])
-  
+        x = tf.keras.layers.Add()([mlp_out, x]) # do a stochastic depth layer here 
+
     #### Sequence Pooling ####
     
     output = SeqPool(num_classes = classes,

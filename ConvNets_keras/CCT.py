@@ -21,7 +21,6 @@ settings['randomMin'] = 0
 settings['dropout'] = 0.1
 settings['transformerLayers'] = 2
 settings['epsilon'] = 1e-6
-projection_dim = 128
 settings['denseInitializer'] = 'glorot_uniform'
 settings['heads'] = 2
 settings['conv2DInitializer'] = 'he_normal'
@@ -149,13 +148,13 @@ def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they
 ### CCT MODEL
 def CCT(classes, 
         input_shape = (None, None, 3),
-        L_num_transformer_layers = 14,
+        num_TransformerLayers = 14,
         num_heads = 6,
         mlp_ratio = 3,
-        projection_dim = 384,
-        K_kernel_size = 7,
-        conv_tokenizer_strides = 2,
-        T_num_tokenizer_layers = 2,
+        embedding_dim = 384,
+        tokenizer_kernel_size = 7,
+        tokenizer_strides = 2,
+        num_tokenizer_ConvLayers = 2,
         DropOut_rate = 0.1,
         settings = settings,
         positional_embedding = True):
@@ -164,17 +163,18 @@ def CCT(classes,
     In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
     CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
     """
+    Tokenizer_ConvLayers_dims = [embedding_dim//2**(i) for i in reversed(range(num_tokenizer_ConvLayers))]
     # Need to add tokenizer settings
     input = tf.keras.layers.Input(
 		shape = input_shape, 
 		name = 'input')
     
     x = input
-    x = Conv_Tokenizer(strides = conv_tokenizer_strides, 
-              kernel_size = K_kernel_size,
+    x = Conv_Tokenizer(strides = tokenizer_strides, 
+              kernel_size = tokenizer_kernel_size,
               #kernel_initializer = settings['conv2DInitializer'],
               activation = 'relu',
-              list_embedding_dims = [projection_dim//2, projection_dim])(x)
+              list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
     
     if positional_embedding:
         
@@ -193,7 +193,7 @@ def CCT(classes,
 
     ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
 	### transformer block layers
-    for k in range(L_num_transformer_layers):
+    for k in range(num_TransformerLayers):
         
         att = tf.keras.layers.LayerNormalization(
 			epsilon = settings['epsilon'],
@@ -202,13 +202,13 @@ def CCT(classes,
         
         att = keras.layers.MultiHeadAttention(
 			num_heads = num_heads, 
-            key_dim = projection_dim,
+            key_dim = embedding_dim,
             dropout = DropOut_rate,
 			#name = f"transformer_{k}_attention"
 		)(att, att)
         x = tf.keras.layers.Add()([att, x])
         x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
-        mlp_out = MLP_block(embedding_dim = projection_dim,
+        mlp_out = MLP_block(embedding_dim = embedding_dim,
                             mlp_ratio = mlp_ratio,
                       DropOut = DropOut_rate 
 			#name = f"transformer_{k}_mlp"

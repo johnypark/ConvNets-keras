@@ -56,6 +56,7 @@ def input_stem(ResNetType = "C",
             for i in range(N_Conv3x3):  
                 x = ConvBlock(filters = channels//2,
                               kernel_size = 3,
+                              activation = activation,
                               #padding = "same",
                               strides = 1,
                               name = name + "_" + str(idx)
@@ -64,6 +65,7 @@ def input_stem(ResNetType = "C",
         
         x = ConvBlock(filters = channels,
                               kernel_size = N_kernel,
+                              activation = activation,
                               padding = "same",
                               strides = 2,
                               name = name + "_" + str(idx)                             

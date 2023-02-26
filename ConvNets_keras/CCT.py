@@ -102,28 +102,6 @@ def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they
         x = tf.transpose(x, perm = [0, 2, 1])
         x = tf.matmul(x, x_init)
         x = tf.squeeze(x, axis = 1)     
-        #x = tf.squeeze( # why squeeze???
-        #    axis = -2,
-        #    input = tf.matmul(
-        #        a = tf.keras.layers.Dense(
-        #            activation = 'softmax',
-        #            activity_regularizer = None,
-        #            bias_constraint = None,
-        #            bias_initializer = 'zeros',
-        #            bias_regularizer = None,
-        #            kernel_constraint = None,
-        #            kernel_initializer = settings['denseInitializer'],
-        #            kernel_regularizer = None,
-        #            name = 'weight',
-        #            units = 1,
-        #            use_bias = True
-        #        )(x),
-        #        b = x, 
-        #        name = 'apply_weight',
-        #        transpose_a = True
-        #    ),
-        #    name = 'squeeze'
-        #)
         output = tf.keras.layers.Dense(
             activation = None,
             activity_regularizer = None,
@@ -173,10 +151,10 @@ def CCT(classes,
               activation = 'relu',
               list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
     
-    if positional_embedding:
+    if positional_embedding: # this does not work!
         
         embedding = tf.random.truncated_normal(
-			shape = (x.shape.as_list()[1], x.shape.as_list()[2]),
+			shape = (tf.shape(x)[1], tf.shape(x)[2]),
 			mean = 0.0,
 			stddev = settings['std_embedding'],
 			dtype = tf.dtypes.float32,

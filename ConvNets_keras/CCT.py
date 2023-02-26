@@ -62,7 +62,7 @@ def Conv_Tokenizer(
         strides = pooling_stride 
       )(x)
     x =  tf.reshape(#name = name+'reshape_1',
-                      shape = (-1, tf.shape(x)[1]*tf.shape(x)[2], tf.shape(x)[3]),
+                      shape = (-1, tf.shape(x)[3], tf.shape(x)[1]*tf.shape(x)[2]),
                       tensor = x)
     return x
 

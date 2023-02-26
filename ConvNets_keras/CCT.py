@@ -76,11 +76,11 @@ def MLP_block(embedding_dim,
     
     def apply(inputs):
         x = inputs
-        x = keras.layers.Conv2D(filter = int(embedding_dim*mlp_ratio),
+        x = keras.layers.Conv2D(filters = int(embedding_dim*mlp_ratio),
                                     kernel_size = 1)(x)
         x = keras.layers.Activation(activation)(x)
         x = keras.layers.Dropout(dropout_rate = DropOut)(x)
-        x = keras.layers.Conv2D(filter = embedding_dim,
+        x = keras.layers.Conv2D(filters = embedding_dim,
                                     kernel_size = 1)(x)
         x = keras.layers.Activation(activation)(x)
         x = keras.layers.Dropout(dropout_rate = DropOut)(x)

@@ -76,12 +76,10 @@ def MLP_block(embedding_dim,
     
     def apply(inputs):
         x = inputs
-        x = keras.layers.Conv2D(filters = int(embedding_dim*mlp_ratio),
-                                    kernel_size = 1)(x)
+        x = keras.layers.Dense(unit = int(embedding_dim*mlp_ratio))(x)
         x = keras.layers.Activation(activation)(x)
         x = keras.layers.Dropout(dropout_rate = DropOut)(x)
-        x = keras.layers.Conv2D(filters = embedding_dim,
-                                    kernel_size = 1)(x)
+        x = keras.layers.Dense(unit = embedding_dim)(x)
         x = keras.layers.Activation(activation)(x)
         x = keras.layers.Dropout(dropout_rate = DropOut)(x)
         
@@ -166,8 +164,7 @@ def CCT(classes,
     Tokenizer_ConvLayers_dims = [embedding_dim//2**(i) for i in reversed(range(num_tokenizer_ConvLayers))]
     # Need to add tokenizer settings
     input = tf.keras.layers.Input(
-		shape = input_shape, 
-		name = 'input')
+		shape = input_shape)
     
     x = input
     x = Conv_Tokenizer(strides = tokenizer_strides, 
@@ -211,7 +208,6 @@ def CCT(classes,
         mlp_out = MLP_block(embedding_dim = embedding_dim,
                             mlp_ratio = mlp_ratio,
                       DropOut = DropOut_rate 
-			#name = f"transformer_{k}_mlp"
 		)(x)
         x = tf.keras.layers.Add()([mlp_out, x]) # do a stochastic depth layer here 
 

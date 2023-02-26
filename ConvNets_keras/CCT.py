@@ -26,14 +26,13 @@ settings['denseInitializer'] = 'glorot_uniform'
 settings['heads'] = 2
 settings['conv2DInitializer'] = 'he_normal'
 
-def CCT_tokenizer( 
-              strides, 
+def CCT_tokenizer(
               kernel_size,
-              pool_size,
-              pooling_stride,
               kernel_initializer,
               activation,
-              out_channels = [64, 128], 
+              list_embedding_dims = [256], 
+              pool_size = 3,
+              pooling_stride = 2,
               name = None,
               padding = 'same',
               use_bias = False,
@@ -41,22 +40,21 @@ def CCT_tokenizer(
   
   def apply(inputs):
     x = inputs
-    num_conv_tokenizers = len(out_channels)
+    num_conv_tokenizers = len(list_embedding_dims)
     for k in range(num_conv_tokenizers):
       x = keras.layers.Conv2D(
         activation = activation,
-        filters = out_channels[k],
-        kernel_initializer = kernel_initializer,
+        filters = list_embedding_dims[k],
         kernel_size = kernel_size,
+        strides = kernel_size,
+        kernel_initializer = kernel_initializer,
         name = name,
         padding = padding,
-        strides = strides,
         use_bias = use_bias,
         **kwargs
       )(x)
       x = keras.layers.MaxPool2D(
         name = name+"maxpool_1",
-        padding =  padding,
         pool_size = pool_size, 
         strides = pooling_stride 
       )(x)

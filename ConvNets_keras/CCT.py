@@ -247,6 +247,7 @@ def CCT(classes,
 			num_heads = num_heads, 
             key_dim = projection_dims,
             dropout = DropOut_rate,
+            attention_axes = 1
 			#name = f"transformer_{k}_attention"
 		)(att, att)
         x = tf.keras.layers.Add()([att, x])

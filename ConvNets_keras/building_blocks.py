@@ -282,7 +282,7 @@ class extract_by_size():
 class extract_by_patch():
   def __init__(self, n_patches, padding = 'VALID'):
     self.n_patches = n_patches
-    self.padding = self.padding
+    self.padding = padding
 
   def get_overlap(self, image_size, n_patches):
     from math import ceil

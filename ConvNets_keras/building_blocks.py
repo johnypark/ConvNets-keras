@@ -262,3 +262,43 @@ class StochasticDepth(tf.keras.layers.Layer):
         config = {"survival_probability": self.survival_probability}
 
         return {**base_config, **config}
+    
+
+class extract_by_size():
+    def __init__(self, patch_size, padding = 'VALID'):
+        self.patch_size = patch_size
+        self.padding = padding
+        
+    def __call__(self, input):
+        x = tf.image.extract_patches( images = input, 
+                                  sizes = [1, self.patch_size, self.patch_size, 1],
+                                  strides = [1, self.patch_size, self.patch_size, 1],
+                                  rates = [1, 1, 1, 1],
+                                  padding = self.padding
+                                  )
+        return x
+
+
+class extract_by_patch():
+  def __init__(self, n_patches, padding = 'VALID'):
+    self.n_patches = n_patches
+    self.padding = self.padding
+
+  def get_overlap(self, image_size, n_patches):
+    from math import ceil
+    n_overlap = n_patches - 1
+    patch_size = ceil(image_size/ n_patches)
+    return patch_size, (n_patches*patch_size - image_size) // n_overlap
+    
+  
+  def __call__(self, inputs):
+    patch_size_x, overlap_x = self.get_overlap(image_size = tf.shape(inputs)[1], n_patches = self.n_patches )
+    patch_size_y, overlap_y = self.get_overlap(image_size = tf.shape(inputs)[2], n_patches = self.n_patches )
+    
+    result = tf.image.extract_patches(images = inputs,
+                           sizes=[1, patch_size_x, patch_size_y, 1],
+                           strides=[1, (patch_size_x - overlap_x), (patch_size_y - overlap_y), 1],
+                           rates=[1, 1, 1, 1],
+                           padding= self.padding)
+
+    return result

@@ -40,6 +40,10 @@ Another problem statement is to suggest best practices for training ConvNets wit
 - [Separable Self-attention for Mobile Vision Transformers](https://arxiv.org/abs/2206.02680)
 - [Escaping the Big Data Paradigm with Compact Transformers](https://arxiv.org/abs/2104.05704)
 
+6. Efficient Transformers
+- [Token learner](https://github.com/google-research/scenic/tree/main/scenic/projects/token_learner)
+- [Linformer]
+
 
 ## Installation
  

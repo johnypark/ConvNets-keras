@@ -6,7 +6,13 @@ The purpose of this project is to offer flexible customizable options for modern
 
 Another problem statement is to suggest best practices for training ConvNets with limited amount of resources. For example, (Bello et al., 2021) showed differential strengths of variable layer settings when trainig length is considered as the optimizing variable. Likewise, some ConvNets may work better for certain training regime that are constrained by resource availability --- Wider and shorter ResNets may work better when training for shorter time than deeper ResNets.
 
-Reference Papers:
+## To Do Lists:
+
+[] Add patch extraction method in CVT --- Feed Convolutional layer with kernel size K and strides K to reduce image resolution R to (R//K, R//K, C), where C= embedding dimension and projection dimension.
+
+
+
+## Reference Papers:
 1. Residual Blocks and BottleNeck Structure:
 - [Deep Residual Learning for Image Recognition (Kaiming He et al., 2015)](https://arxiv.org/abs/1512.03385)
 - [Bag of Tricks for Image Classification with Convolutional Neural Networks (Tong He et al., 2018)](https://arxiv.org/abs/1812.01187)

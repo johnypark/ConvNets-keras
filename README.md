@@ -1,8 +1,8 @@
-# ConvNets-keras
+# NeuralNets-keras
 
-CNNs Reimplementations in keras
+NNs Reimplementations in keras
 
-The purpose of this project is to offer flexible customizable options for modern CNNs in keras.
+The purpose of this project is to offer flexible customizable options for modern NNs in keras.
 
 Another problem statement is to suggest best practices for training ConvNets with limited amount of resources. For example, (Bello et al., 2021) showed differential strengths of variable layer settings when trainig length is considered as the optimizing variable. Likewise, some ConvNets may work better for certain training regime that are constrained by resource availability --- Wider and shorter ResNets may work better when training for shorter time than deeper ResNets.
 

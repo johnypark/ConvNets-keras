@@ -8,7 +8,7 @@ Another problem statement is to suggest best practices for training ConvNets wit
 
 ## To Do Lists:
 
-- [] Add patch extraction method in CVT --- Feed Convolutional layer with kernel size K and strides K to reduce image resolution R to (R//K, R//K, C), where C= embedding dimension and projection dimension.
+- [ ] Add patch extraction method in CVT --- Feed Convolutional layer with kernel size K and strides K to reduce image resolution R to (R//K, R//K, C), where C= embedding dimension and projection dimension.
 
 
 
@@ -73,9 +73,9 @@ ResNet() allows customizing number of channels, bottleneck layers, and number of
 Usage example building ResNet-50 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XlDZWoYzNMYNRZnCsTA6exesbn_P85nF?usp=sharing)
 
 ``` python
-import ConvNets_keras as crk
+import NeuralNets_keras as nrk
 
-rs50 = crk.ResNet(classes = 1000,
+rs50 = nrk.ResNet(classes = 1000,
                 input_shape = (224, 224, 3),
                 N_filters = [256, 512, 1024, 2048],  
                 N_BottleNecks = {256: 64, 512:128, 1024:256, 2048:512},

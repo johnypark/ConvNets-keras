@@ -26,7 +26,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 import json
 from tensorflow import keras
-from ConvNets_keras.building_blocks import *
+from NeuralNets_keras.building_blocks import *
 
 
 def input_stem(ResNetType = "C",

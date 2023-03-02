@@ -32,7 +32,7 @@ import json
 from tensorflow import keras
 import tensorflow as tf
 from tensorflow import keras
-from ConvNets_keras.building_blocks import *
+from NeuralNets_keras.building_blocks import *
 
 
 def RexNetV1(input_ch=16, 

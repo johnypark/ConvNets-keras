@@ -8,7 +8,7 @@ Another problem statement is to suggest best practices for training ConvNets wit
 
 ## To Do Lists:
 
-[] Add patch extraction method in CVT --- Feed Convolutional layer with kernel size K and strides K to reduce image resolution R to (R//K, R//K, C), where C= embedding dimension and projection dimension.
+- [] Add patch extraction method in CVT --- Feed Convolutional layer with kernel size K and strides K to reduce image resolution R to (R//K, R//K, C), where C= embedding dimension and projection dimension.
 
 
 

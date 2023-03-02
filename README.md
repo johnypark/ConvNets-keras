@@ -43,7 +43,7 @@ Another problem statement is to suggest best practices for training ConvNets wit
 6. Efficient Transformers
 - [Token learner](https://github.com/google-research/scenic/tree/main/scenic/projects/token_learner)
 - [Linformer]
-
+- [Reformer: The Efficient Transforme, ICLR 2020](https://arxiv.org/abs/2001.04451)
 
 ## Installation
  

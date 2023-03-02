@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ConvNets-keras", # Replace with your own username
+    name="NeuralNets-keras", # Replace with your own username
     version="1.0",
     author="John Park",
     author_email="",
-    description="Modern CNNs in keras",
+    description="Modern NNs in keras",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/johnypark/ConvNets-keras",
+    url="https://github.com/johnypark/NeuralNets-keras",
     packages=setuptools.find_packages(),
     install_requires = ['tensorflow',
                        'tensorflow-addons',

@@ -329,7 +329,47 @@ def MLP_block(embedding_dim,
     return apply
 
 
+class positional_embedding():
+    
+    def __init__(self, 
+                 sequence_length, 
+                 embedding_dim,
+                 embedding_type = 'sinusodial'):
+        
+        self.embedding_type = embedding_type
+        self.sequence_length = sequence_length
+        self.embedding_dim = embedding_dim
+        if embedding_type:
+            if embedding_type == 'sinusodial':
+                self.positional_embedding = tf.Variable(self.sinusodial_embedding(n_channels = self.sequence_length,
+                                              dim = self.embedding_dim
+                                              ),
+                    trainable = False)
+            elif embedding_type == 'learnable':
+                self.positional_emb = tf.Variable(tf.random.truncated_normal(shape=[1, sequence_length, embedding_dim], stddev=0.2))
+            
+        else:
+            self.positional_emb = None
+        
+    def sinusodial_embedding(self, n_channels, dim):
+        embed = tf.cast(([[p / (10000 ** (2 * (i // 2) / dim)) for i in range(dim)] for p in range(n_channels)]), tf.float32)
+        embed[:, 0::2] = tf.sin(embed[:, 0::2])
+        embed[:, 1::2] = tf.cos(embed[:, 1::2])
+        embed = tf.expand_dims(embed, axis=0)
 
+        return embed
+        
+    def __call__(self, input, how = 'add'):
+        
+        if how == 'add':
+            input = tf.keras.layers.Add()([input, self.positional_embedding]) # tf math add or concat? 
+        elif how == 'concat':
+            input = tf.concat([input, self.positional_embedding], 
+                              axis = 0)
+        
+        return input
+        
+        
 def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they tested static pooling methods but leanrable weighting is more effcient
     # because each embedded patch does not contain the same amount of entropy. Enables the model to apply weights to tokens with repsect to the relevance of their information
     

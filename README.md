@@ -6,7 +6,13 @@ The purpose of this project is to offer flexible customizable options for modern
 
 Another problem statement is to suggest best practices for training ConvNets with limited amount of resources. For example, (Bello et al., 2021) showed differential strengths of variable layer settings when trainig length is considered as the optimizing variable. Likewise, some ConvNets may work better for certain training regime that are constrained by resource availability --- Wider and shorter ResNets may work better when training for shorter time than deeper ResNets.
 
-Reference Papers:
+## To Do Lists:
+
+- [ ] Add patch extraction method in CVT --- Feed Convolutional layer with kernel size K and strides K to reduce image resolution R to (R//K, R//K, C), where C= embedding dimension and projection dimension.
+
+
+
+## Reference Papers:
 1. Residual Blocks and BottleNeck Structure:
 - [Deep Residual Learning for Image Recognition (Kaiming He et al., 2015)](https://arxiv.org/abs/1512.03385)
 - [Bag of Tricks for Image Classification with Convolutional Neural Networks (Tong He et al., 2018)](https://arxiv.org/abs/1812.01187)
@@ -34,6 +40,10 @@ Reference Papers:
 - [Separable Self-attention for Mobile Vision Transformers](https://arxiv.org/abs/2206.02680)
 - [Escaping the Big Data Paradigm with Compact Transformers](https://arxiv.org/abs/2104.05704)
 
+6. Efficient Transformers
+- [Token learner](https://github.com/google-research/scenic/tree/main/scenic/projects/token_learner)
+- [Linformer]
+- [Reformer: The Efficient Transforme, ICLR 2020](https://arxiv.org/abs/2001.04451)
 
 ## Installation
  
@@ -67,9 +77,9 @@ ResNet() allows customizing number of channels, bottleneck layers, and number of
 Usage example building ResNet-50 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1XlDZWoYzNMYNRZnCsTA6exesbn_P85nF?usp=sharing)
 
 ``` python
-import ConvNets_keras as crk
+import NeuralNets_keras as nrk
 
-rs50 = crk.ResNet(classes = 1000,
+rs50 = nrk.ResNet(classes = 1000,
                 input_shape = (224, 224, 3),
                 N_filters = [256, 512, 1024, 2048],  
                 N_BottleNecks = {256: 64, 512:128, 1024:256, 2048:512},

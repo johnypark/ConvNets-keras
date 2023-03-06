@@ -329,7 +329,33 @@ def MLP_block(embedding_dim,
     return apply
 
 
-class positional_embedding():
+def sinusodial_embedding(n_channels, dim):
+    
+        """ sinusodial embedding in the attention is all you need paper """
+    
+        def criss_cross(k):
+            n_odd = k//2
+            n_even = k - k//2
+            # even columns go first 
+            even = list(range(n_even))
+            odd = list(range(n_even, k))
+            ccl = []
+            for i in range(k//2):
+                ccl = ccl+ [even[i]]+ [odd[i]]
+            if k//2 != k/2:
+                ccl = ccl + [even[k//2]]
+            return ccl
+            
+        embed = tf.cast(([[p / (10000 ** (2 * (i//2) / dim)) for i in range(dim)] for p in range(n_channels)]), tf.float32)
+        even_col =  tf.sin(embed[:, 0::2])
+        odd_col = tf.cos(embed[:, 1::2])
+        embed = tf.concat([even_col, odd_col], axis = 1)
+        embed = tf.gather(embed, criss_cross(dim), axis = 1)
+        embed = tf.expand_dims(embed, axis=0)
+
+        return embed
+
+class add_positional_embedding():
     
     def __init__(self, 
                  sequence_length, 
@@ -341,7 +367,7 @@ class positional_embedding():
         self.embedding_dim = embedding_dim
         if embedding_type:
             if embedding_type == 'sinusodial':
-                self.positional_embedding = tf.Variable(self.sinusodial_embedding(n_channels = self.sequence_length,
+                self.positional_embedding = tf.Variable(sinusodial_embedding(n_channels = self.sequence_length,
                                               dim = self.embedding_dim
                                               ),
                     trainable = False)
@@ -351,22 +377,8 @@ class positional_embedding():
         else:
             self.positional_emb = None
         
-    def sinusodial_embedding(self, n_channels, dim):
-        embed = tf.cast(([[p / (10000 ** (2 * (i // 2) / dim)) for i in range(dim)] for p in range(n_channels)]), tf.float32)
-        embed[:, 0::2] = tf.sin(embed[:, 0::2])
-        embed[:, 1::2] = tf.cos(embed[:, 1::2])
-        embed = tf.expand_dims(embed, axis=0)
-
-        return embed
-        
-    def __call__(self, input, how = 'add'):
-        
-        if how == 'add':
-            input = tf.keras.layers.Add()([input, self.positional_embedding]) # tf math add or concat? 
-        elif how == 'concat':
-            input = tf.concat([input, self.positional_embedding], 
-                              axis = 0)
-        
+    def __call__(self, input):
+        input = tf.keras.layers.Add(name = 'add_positional_embedding')([input, self.positional_embedding]) # tf math add or concat? 
         return input
         
         

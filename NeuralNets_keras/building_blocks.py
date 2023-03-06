@@ -1,5 +1,5 @@
 __copyright__ = """
-Building Blocks of ConvNets
+Building Blocks of NeuralNets
 Copyright (c) 2023 John Park
 """
 ### style adapted from TensorFlow authors
@@ -329,9 +329,12 @@ def MLP_block(embedding_dim,
     return apply
 
 
-def sinusodial_embedding(n_channels, dim):
+def sinusodial_embedding(num_patches, embed_dim):
     
-        """ sinusodial embedding in the attention is all you need paper """
+        """ sinusodial embedding in the attention is all you need paper 
+        example:
+        >> plt.imshow(sinusodial_embedding(100,120).numpy()[0], cmap='hot',aspect='auto')
+        """
     
         def criss_cross(k):
             n_odd = k//2
@@ -346,11 +349,11 @@ def sinusodial_embedding(n_channels, dim):
                 ccl = ccl + [even[k//2]]
             return ccl
             
-        embed = tf.cast(([[p / (10000 ** (2 * (i//2) / dim)) for i in range(dim)] for p in range(n_channels)]), tf.float32)
+        embed = tf.cast(([[p / (10000 ** (2 * (i//2) / embed_dim)) for i in range(embed_dim)] for p in range(num_patches)]), tf.float32)
         even_col =  tf.sin(embed[:, 0::2])
         odd_col = tf.cos(embed[:, 1::2])
         embed = tf.concat([even_col, odd_col], axis = 1)
-        embed = tf.gather(embed, criss_cross(dim), axis = 1)
+        embed = tf.gather(embed, criss_cross(embed_dim), axis = 1)
         embed = tf.expand_dims(embed, axis=0)
 
         return embed
@@ -358,21 +361,21 @@ def sinusodial_embedding(n_channels, dim):
 class add_positional_embedding():
     
     def __init__(self, 
-                 sequence_length, 
+                 patch_length, 
                  embedding_dim,
                  embedding_type = 'sinusodial'):
         
         self.embedding_type = embedding_type
-        self.sequence_length = sequence_length
+        self.patch_length = patch_length
         self.embedding_dim = embedding_dim
         if embedding_type:
             if embedding_type == 'sinusodial':
-                self.positional_embedding = tf.Variable(sinusodial_embedding(n_channels = self.sequence_length,
-                                              dim = self.embedding_dim
+                self.positional_embeding = tf.Variable(sinusodial_embedding(num_patches = self.patch_length,
+                                              embed_dim = self.embedding_dim
                                               ),
                     trainable = False)
             elif embedding_type == 'learnable':
-                self.positional_emb = tf.Variable(tf.random.truncated_normal(shape=[1, sequence_length, embedding_dim], stddev=0.2))
+                self.positional_embedding = tf.Variable(tf.random.truncated_normal(shape=[1, self.patch_length, self.embedding_dim], stddev=0.2))
             
         else:
             self.positional_emb = None

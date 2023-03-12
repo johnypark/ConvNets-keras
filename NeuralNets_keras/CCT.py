@@ -301,6 +301,10 @@ def CCTV2(classes,
     input = tf.keras.layers.Input(
 		shape = input_shape)
     
+    patch_size = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
+                                             pool_strides = 2, 
+                                             num_tokenizer_ConvLayers = num_tokenizer_ConvLayers)(input_shape[0])
+    seq_length = patch_size**2
     x = input
     x = Conv_TokenizerV2(strides = tokenizer_strides, 
               kernel_size = tokenizer_kernel_size,
@@ -311,8 +315,8 @@ def CCTV2(classes,
               list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
     
     if positional_embedding: # this does not work!
-        x = add_positional_embedding(patch_length = tf.shape(x)[1] , 
-                               embedding_dim =tf.shape(x)[2],
+        x = add_positional_embedding(patch_length = seq_length , 
+                               embedding_dim = embedding_dim,
                                embedding_type = 'sinusodial')(x)
         
     x = tf.keras.layers.Dropout(settings['dropout'])(x)

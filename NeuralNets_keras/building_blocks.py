@@ -370,7 +370,7 @@ class add_positional_embedding():
         self.embedding_dim = embedding_dim
         if embedding_type:
             if embedding_type == 'sinusodial':
-                self.positional_embeding = tf.Variable(sinusodial_embedding(num_patches = self.patch_length,
+                self.positional_embedding = tf.Variable(sinusodial_embedding(num_patches = self.patch_length,
                                               embed_dim = self.embedding_dim
                                               ),
                     trainable = False)
@@ -378,7 +378,7 @@ class add_positional_embedding():
                 self.positional_embedding = tf.Variable(tf.random.truncated_normal(shape=[1, self.patch_length, self.embedding_dim], stddev=0.2))
             
         else:
-            self.positional_emb = None
+            self.positional_embedding = None
         
     def __call__(self, input):
         input = tf.keras.layers.Add(name = 'add_positional_embedding')([input, self.positional_embedding]) # tf math add or concat? 

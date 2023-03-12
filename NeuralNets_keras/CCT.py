@@ -13,6 +13,7 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import random
+from NeuralNets_keras.building_blocks import sinusodial_embedding, add_positional_embedding
 
 settings['positionalEmbedding'] = True
 settings['std_embedding'] = 0.2
@@ -113,8 +114,6 @@ def Conv_TokenizerV2(
     return x
 
   return apply
-
-
 
 
 def get_dim_Conv_Tokenizer(Conv_strides, pool_strides, num_tokenizer_ConvLayers):
@@ -224,7 +223,8 @@ def CCT(classes,
     
     if positional_embedding: # this does not work!
         
-        embedding = tf.random.truncated_normal(
+        
+      embedding = tf.random.truncated_normal(
 			shape = (tf.shape(x)[1], tf.shape(x)[2]),
 			mean = 0.0,
 			stddev = settings['std_embedding'],
@@ -233,8 +233,7 @@ def CCT(classes,
                          settings['randomMax']),
 			name = 'learnable_embedding'
 		)
-        
-        x = tf.math.add(x, embedding) # maybe change this to layer add?
+    x = tf.keras.layers.Add()([x, embedding])
     x = tf.keras.layers.Dropout(settings['dropout'])(x)
     projection_dims = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
                                              pool_strides = 2, 
@@ -312,18 +311,10 @@ def CCTV2(classes,
               list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
     
     if positional_embedding: # this does not work!
+        x = add_positional_embedding(patch_length = tf.shape(x)[1] , 
+                               embedding_dim =tf.shape(x)[2],
+                               embedding_type = 'sinusodial')(x)
         
-        embedding = tf.random.truncated_normal(
-			shape = (tf.shape(x)[1], tf.shape(x)[2]),
-			mean = 0.0,
-			stddev = settings['std_embedding'],
-			dtype = tf.dtypes.float32,
-			seed = random.randint(settings['randomMin'],
-                         settings['randomMax']),
-			name = 'learnable_embedding'
-		)
-        
-        x = tf.math.add(x, embedding) # maybe change this to layer add?
     x = tf.keras.layers.Dropout(settings['dropout'])(x)
     #projection_dims = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
     #                                         pool_strides = 2, 

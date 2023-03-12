@@ -163,7 +163,7 @@ def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they
         x_init = x
             # Apply sequence pooling.
         x = tf.nn.softmax(tf.keras.layers.Dense(units =1)(x), axis = 1)
-        x = tf.keras.layers.Dense(units = 1, activation = 'softmax')(x)
+        #x = tf.keras.layers.Dense(units = 1, activation = 'softmax')(x)
         #x = tf.transpose(x, perm = [0, 2, 1])
         w_x = tf.matmul(x, x_init, transpose_a = True)
         w_x = tf.squeeze(w_x, axis = -2)     

@@ -290,6 +290,7 @@ def CCTV2(classes,
         num_tokenizer_ConvLayers = 2,
         DropOut_rate = 0.1,
         settings = settings,
+        n_SeqPool_weights = 1,
         positional_embedding = True):
 
     """ CCT-L/PxT: L transformer encoder layers and PxP patch size.
@@ -354,6 +355,7 @@ def CCTV2(classes,
     #### Sequence Pooling ####
     
     output = SeqPool(num_classes = classes,
-                     settings = settings)(x)
+                     settings = settings,
+                     n_attn_channel= n_SeqPool_weights)(x)
     
     return tf.keras.Model(inputs = input, outputs = output)

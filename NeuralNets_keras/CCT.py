@@ -151,9 +151,12 @@ def MLP_block(embedding_dim,
     return apply
 
 
-def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they tested static pooling methods but leanrable weighting is more effcient
-    # because each embedded patch does not contain the same amount of entropy. Enables the model to apply weights to tokens with repsect to the relevance of their information
-    
+def SeqPool(num_classes, settings, n_attn_channel = 1): 
+    """ Learnable pooling layer. 
+    In the paper they tested static pooling methods but learnable weighting is more effcient, 
+    because each embedded patch does not contain the same amount of entropy. 
+    Enables the model to apply weights to tokens with repsect to the relevance of their information
+    """
     def apply(inputs):
         x = inputs    
         x = tf.keras.layers.LayerNormalization(
@@ -162,11 +165,11 @@ def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they
         )(x)
         x_init = x
             # Apply sequence pooling.
-        x = tf.nn.softmax(tf.keras.layers.Dense(units =1)(x), axis = 1)
-        #x = tf.keras.layers.Dense(units = 1, activation = 'softmax')(x)
+        #x = tf.nn.softmax(tf.keras.layers.Dense(units = n_attn_channel)(x), axis = 1)
+        x = tf.keras.layers.Dense(units = n_attn_channel, activation = 'softmax')(x)
         #x = tf.transpose(x, perm = [0, 2, 1])
         w_x = tf.matmul(x, x_init, transpose_a = True)
-        w_x = tf.squeeze(w_x, axis = -2)     
+        w_x = tf.keras.layers.Flatten()(w_x)     
         output = tf.keras.layers.Dense(
             activation = None,
             activity_regularizer = None,
@@ -197,6 +200,7 @@ def CCT(classes,
         tokenizer_strides = 2,
         num_tokenizer_ConvLayers = 2,
         DropOut_rate = 0.1,
+        n_SeqPool_weights = 1,
         settings = settings,
         positional_embedding = True):
 
@@ -267,7 +271,8 @@ def CCT(classes,
     #### Sequence Pooling ####
     
     output = SeqPool(num_classes = classes,
-                     settings = settings)(x)
+                     settings = settings,
+                     n_attn_channel = n_SeqPool_weights)(x)
     
     return tf.keras.Model(inputs = input, outputs = output)
 

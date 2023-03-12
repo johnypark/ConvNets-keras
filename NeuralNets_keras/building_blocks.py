@@ -384,39 +384,6 @@ class add_positional_embedding():
         input = tf.keras.layers.Add(name = 'add_positional_embedding')([input, self.positional_embedding]) # tf math add or concat? 
         return input
         
-        
-def SeqPool(num_classes, settings): # Learnable pooling layer. In the paper they tested static pooling methods but leanrable weighting is more effcient
-    # because each embedded patch does not contain the same amount of entropy. Enables the model to apply weights to tokens with repsect to the relevance of their information
-    
-    def apply(inputs):
-        x = inputs    
-        x = tf.keras.layers.LayerNormalization(
-            epsilon = settings['epsilon'],
-            name = 'final_norm'
-        )(x)
-        x_init = x
-        x = tf.keras.layers.Dense(units = 1, activation = 'softmax')(x)
-        x = tf.transpose(x, perm = [0, 2, 1])
-        x = tf.matmul(x, x_init)
-        x = tf.squeeze(x, axis = 1)     
-        output = tf.keras.layers.Dense(
-            activation = None,
-            activity_regularizer = None,
-            bias_constraint = None,
-            bias_initializer = 'zeros',
-            bias_regularizer = None,
-            kernel_constraint = None,
-            kernel_initializer = settings['denseInitializer'],
-            kernel_regularizer = None,
-            #name = 'output',
-            units = num_classes,
-            use_bias = True
-        )(x)
-
-        return output
-
-    return apply
-
 
 class extract_by_size():
     def __init__(self, patch_size, padding = 'VALID'):

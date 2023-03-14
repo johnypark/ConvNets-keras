@@ -48,6 +48,21 @@ def SeqPool(settings, n_attn_channel = 1):
 
     return apply
         
+
+def get_dim_Conv_Tokenizer(Conv_strides, 
+                           pool_strides, 
+                           num_tokenizer_ConvLayers):
+
+    def apply(input):
+
+        start = input
+        for k in range(num_tokenizer_ConvLayers):
+            Conv_out = -(start // -Conv_strides)            
+            pool_out = -(Conv_out // - pool_strides)  
+            start = pool_out          
+        return pool_out
+    return apply
+        
 ### CCT MODEL
 def CCTV2(num_classes, 
         input_shape = (None, None, 3),

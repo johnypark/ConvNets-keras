@@ -26,6 +26,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 import json
 from tensorflow import keras
+from einops import rearrange
 
 
 KERNEL_INIT = {
@@ -292,7 +293,69 @@ class MultiHeadSelfAttention(keras.layers.Layer):
     @classmethod
     def from_config(cls, config):
         return cls(**config)
+
+# Modified from https://github.com/taki0112/vit-tensorflow/blob/main/vit_tensorflow/cct.py
+@tf.keras.utils.register_keras_serializable()
+class Attention(tf.keras.layers.Layer):
+    def __init__(self, 
+                 num_heads,
+                 output_weights = False, 
+                 attention_dropout=0.1, 
+                 projection_dropout=0.1):
+        super(Attention, self).__init__()
+
+        self.num_heads = num_heads
+        self.attention_dropout = attention_dropout
+        self.projection_dropout = projection_dropout
+        self.output_weights = self.output_weights
         
+    def build(self, input_shape):
+        
+        embedding_dim = input_shape[-1]
+        self.projection_dim = embedding_dim // self.num_heads
+        self.attn_scale = self.projection_dim ** -0.5
+        self.to_qkv = tf.keras.layers.Dense(units= embedding_dim * 3, use_bias=False)
+        self.Softmax = tf.keras.layers.Softmax()
+        self.linear = tf.keras.layers.Dense(units = embedding_dim)
+        self.attn_Dropout = tf.keras.layers.Dropout(rate=self.attention_dropout)
+        self.linear_Dropout = tf.keras.layers.Dropout(rate= self.projection_dropout)
+        
+    def ScaledDotProductAttention(self, query, key, value, training):
+        weight = tf.matmul(query, 
+                        tf.transpose(key, 
+                                     perm=[0, 1, 3, 2])
+                        )
+        weight = weight * self.attn_scale
+        weight = self.Softmax(weight)
+        weight = self.attn_Dropout(weight, training = training)
+        output = tf.matmul(weight, value)
+        return output, weight
+         
+    def call(self, x, training=True):
+        qkv = self.to_qkv(x)
+        qkv = tf.split(qkv, num_or_size_splits=3, axis=-1)
+        query, key, value = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), qkv)
+        x, weight = self.ScaledDotProductAttention(query, 
+                                                   key, 
+                                                   value, training = training)
+        x = rearrange(x, 'b h n d -> b n (h d)')
+        x = self.linear(x, training = training)
+        output = self.linear_Dropout(x)
+        
+        if self.output_weights:
+            output = output, weight
+        return output
+    
+    def get_config(self):
+        config = super().get_config()
+        config.update({"num_heads": self.num_heads})
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
+            
 # Feed Forward Network (FFN)
 
 def MLP_block(embedding_dim,

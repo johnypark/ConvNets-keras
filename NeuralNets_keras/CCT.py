@@ -29,7 +29,7 @@ settings['conv2DInitializer'] = 'he_normal'
 
 
 def SeqPool(settings, n_attn_channel = 1): 
-    """ Learnable pooling layer. 
+    """ Learnable pooling layer. Replaces the class token in ViT.
     In the paper they tested static pooling methods but learnable weighting is more effcient, 
     because each embedded patch does not contain the same amount of entropy. 
     Enables the model to apply weights to tokens with repsect to the relevance of their information
@@ -41,10 +41,7 @@ def SeqPool(settings, n_attn_channel = 1):
             name = 'final_norm'
         )(x)
         x_init = x
-            # Apply sequence pooling.
-        #x = tf.nn.softmax(tf.keras.layers.Dense(units = n_attn_channel)(x), axis = 1)
         x = tf.keras.layers.Dense(units = n_attn_channel, activation = 'softmax')(x)
-        #x = tf.transpose(x, perm = [0, 2, 1])
         w_x = tf.matmul(x, x_init, transpose_a = True)
         w_x = tf.keras.layers.Flatten()(w_x)     
         return w_x

@@ -75,7 +75,7 @@ def Conv_Tokenizer(
             use_bias = use_bias,
             **kwargs
             )(x)
-        x = keras.layers.MaxPool2D(
+            x = keras.layers.MaxPool2D(
             #name = name+"maxpool_1",
             pool_size = pool_size, 
             strides = pooling_stride,
@@ -118,31 +118,16 @@ def Conv_TokenizerV2(
             padding = padding,
             use_bias = use_bias,
             **kwargs
-        )(x)
-        x = keras.layers.MaxPool2D(
-        #name = name+"maxpool_1",
-        pool_size = pool_size, 
-        strides = pooling_stride,
-        padding = padding
-        )(x)
+            )(x)
+            x = keras.layers.MaxPool2D(
+            #name = name+"maxpool_1",
+            pool_size = pool_size, 
+            strides = pooling_stride,
+            padding = padding
+            )(x)
         x =  tf.reshape(#name = name+'reshape_1',
                       shape = (-1, tf.shape(x)[1]*tf.shape(x)[2], tf.shape(x)[3]),
                       tensor = x)
         return x
 
     return apply
-
-
-def get_dim_Conv_Tokenizer(Conv_strides, pool_strides, num_tokenizer_ConvLayers):
-
-    def apply(input):
-
-        start = input
-        for k in range(num_tokenizer_ConvLayers):
-            Conv_out = -(start // -Conv_strides)
-            pool_out = -(Conv_out // - pool_strides)
-            start = pool_out
-    
-        return pool_out
-    return apply
-

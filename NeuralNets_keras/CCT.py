@@ -53,14 +53,13 @@ def get_dim_Conv_Tokenizer(Conv_strides,
                            pool_strides, 
                            num_tokenizer_ConvLayers):
 
-    def apply(input):
-
-        start = input
+    def apply(dim):
+        start = dim
         for k in range(num_tokenizer_ConvLayers):
-            Conv_out = -(start // -Conv_strides)            
-            pool_out = -(Conv_out // - pool_strides)  
-            start = pool_out          
-        return pool_out
+            Conv_out_dim = -(start // -Conv_strides)            
+            pool_out_dim = -(Conv_out_dim // - pool_strides)  
+            start = pool_out_dim          
+        return pool_out_dim
     return apply
         
 ### CCT MODEL
@@ -94,14 +93,14 @@ def CCTV2(num_classes,
               activation = 'relu',
               pool_size = 3,
               pooling_stride = 2,
-              list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
+              list_embedding_dim = Tokenizer_ConvLayers_dims)(x)
     
     if positional_embedding:
-        patch_size = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
+        edge_length = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
                                              pool_strides = 2, 
                                              num_tokenizer_ConvLayers = num_tokenizer_ConvLayers)(input_shape[0])
-        seq_length = patch_size**2
-        x = add_positional_embedding(patch_length = seq_length , 
+        num_patches = edge_length**2
+        x = add_positional_embedding(num_patches = num_patches, 
                                embedding_dim = embedding_dim,
                                embedding_type = 'sinusodial')(x)    
     x = tf.keras.layers.Dropout(settings['dropout'])(x)

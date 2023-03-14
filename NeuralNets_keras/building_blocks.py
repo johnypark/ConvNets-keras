@@ -331,8 +331,8 @@ class Attention(tf.keras.layers.Layer):
         output = tf.matmul(weight, value)
         return output, weight
          
-    def call(self, x, training=True):
-        qkv = self.to_qkv(x)
+    def call(self, inputs, training=True):
+        qkv = self.to_qkv(inputs)
         qkv = tf.split(qkv, num_or_size_splits=3, axis=-1)
         query, key, value = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), qkv)
         x, weight = self.ScaledDotProductAttention(query, 
@@ -415,7 +415,7 @@ def Transformer_Block(num_layers,
     
 # Positional embedding
 
-def sinusodial_embedding(num_patches, embed_dim):
+def sinusodial_embedding(num_patches, embedding_dim):
     
         """ sinusodial embedding in the attention is all you need paper 
         example:
@@ -435,11 +435,11 @@ def sinusodial_embedding(num_patches, embed_dim):
                 ccl = ccl + [even[k//2]]
             return ccl
             
-        embed = tf.cast(([[p / (10000 ** (2 * (i//2) / embed_dim)) for i in range(embed_dim)] for p in range(num_patches)]), tf.float32)
+        embed = tf.cast(([[p / (10000 ** (2 * (i//2) / embedding_dim)) for i in range(embedding_dim)] for p in range(num_patches)]), tf.float32)
         even_col =  tf.sin(embed[:, 0::2])
         odd_col = tf.cos(embed[:, 1::2])
         embed = tf.concat([even_col, odd_col], axis = 1)
-        embed = tf.gather(embed, criss_cross(embed_dim), axis = 1)
+        embed = tf.gather(embed, criss_cross(embedding_dim), axis = 1)
         embed = tf.expand_dims(embed, axis=0)
 
         return embed
@@ -447,25 +447,25 @@ def sinusodial_embedding(num_patches, embed_dim):
 class add_positional_embedding():
     
     def __init__(self, 
-                 patch_length, 
+                 num_patches, 
                  embedding_dim,
                  embedding_type = 'sinusodial'):
         
         self.embedding_type = embedding_type
-        self.patch_length = patch_length
+        self.num_patches = num_patches
         self.embedding_dim = embedding_dim
         if embedding_type:
             if embedding_type == 'sinusodial':
-                self.positional_embedding = tf.Variable(sinusodial_embedding(num_patches = self.patch_length,
-                                              embed_dim = self.embedding_dim
+                self.positional_embedding = tf.Variable(sinusodial_embedding(num_patches = self.num_patches,
+                                              embedding_dim = self.embedding_dim
                                               ),
                     trainable = False)
             elif embedding_type == 'learnable':
-                self.positional_embedding = tf.Variable(tf.random.truncated_normal(shape=[1, self.patch_length, self.embedding_dim], stddev=0.2))
+                self.positional_embedding = tf.Variable(tf.random.truncated_normal(shape=[1, self.num_patches, self.embedding_dim], stddev=0.2))
             
         else:
             self.positional_embedding = None
         
     def __call__(self, input):
-        input = tf.keras.layers.Add(name = 'add_positional_embedding')([input, self.positional_embedding]) # tf math add or concat? 
+        input = tf.math.add(input, self.positional_embedding) # tf math add or concat? 
         return input

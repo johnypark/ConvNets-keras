@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="NeuralNets-keras", # Replace with your own username
-    version="1.0",
+    version="0.1",
     author="John Park",
     author_email="",
     description="Modern NNs in keras",
@@ -15,6 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires = ['tensorflow',
                        'tensorflow-addons',
+                       'einops',
                         'typeguard'],
     classifiers=[
         "Programming Language :: Python :: 3",

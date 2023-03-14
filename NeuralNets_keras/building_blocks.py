@@ -228,9 +228,10 @@ def SqueezeBlock(channels,
 # Also learn: https://keras.io/guides/making_new_layers_and_models_via_subclassing/
 
 class MultiHeadSelfAttention(keras.layers.Layer):
-    def __init__(self, *args, num_heads, **kwargs):
+    def __init__(self, *args, num_heads, output_weight = False, **kwargs):
         super().__init__(*args, **kwargs)
         self.num_heads = num_heads
+        self.output_weight = output_weight
 
     def build(self, input_shape):
         hidden_size = input_shape[-1]
@@ -278,7 +279,10 @@ class MultiHeadSelfAttention(keras.layers.Layer):
                                       shape = (batch_size, -1, self.hidden_size)
                                       )
         output = self.combine_heads(concat_attention)
-        return output, weights
+        
+        if self.output_weight:
+            output = output, weights
+        return output
 
     def get_config(self):
         config = super().get_config()

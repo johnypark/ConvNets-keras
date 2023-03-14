@@ -36,7 +36,6 @@ KERNEL_INIT = {
         "distribution": "truncated_normal",
     }} #from resnet-rs
 
-
 def ConvBlock(filters,
               kernel_size,
               strides = 1,
@@ -224,90 +223,7 @@ def SqueezeBlock(channels,
     
     return apply
 
-# modified from tensorflow addons https://github.com/tensorflow/addons/blob/v0.17.0/tensorflow_addons/layers/stochastic_depth.py#L5-L90
-class StochasticDepth(tf.keras.layers.Layer):
-
-    def __init__(self, survival_probability: float = 0.5, **kwargs):
-        super().__init__(**kwargs)
-
-        self.survival_probability = survival_probability
-
-    def call(self, x, training=None):
-        if not isinstance(x, list) or len(x) != 2:
-            raise ValueError("input must be a list of length 2.")
-
-        shortcut, residual = x
-
-        # Random bernoulli variable indicating whether the branch should be kept or not or not
-        b_out = keras.backend.random_bernoulli(
-            [], p=self.survival_probability
-        )
-
-        def _call_train():
-            return tf.keras.layers.Add()(shortcut, b_out * residual)
-
-        def _call_test():
-            return tf.keras.layers.Add()(shortcut, residual)
-
-        return tf.keras.backend.in_train_phase(
-            _call_train, _call_test, training=training
-        )
-
-    def compute_output_shape(self, input_shape):
-        return input_shape[0]
-
-    def get_config(self):
-        base_config = super().get_config()
-
-        config = {"survival_probability": self.survival_probability}
-
-        return {**base_config, **config}
-    
-    
-def Conv_TokenizerV2(
-              kernel_size,
-              strides = 2, 
-              ##kernel_initializer,
-              activation = 'relu',
-              list_embedding_dims = [256], 
-              pool_size = 3,
-              pooling_stride = 2,
-              name = None,
-              padding = 'same',
-              use_bias = False,
-              **kwargs):
-  
-  def apply(inputs):
-    #strides = strides if strides is not None else max(1, (kernel_size // 2) - 1)
-    #padding = padding if padding is not None else max(1, (kernel_size // 2))
-    
-    x = inputs
-    num_conv_tokenizers = len(list_embedding_dims)
-    for k in range(num_conv_tokenizers):
-      x = keras.layers.Conv2D(
-        activation = activation,
-        filters = list_embedding_dims[k],
-        kernel_size = kernel_size,
-        strides = strides,
-        #kernel_initializer = kernel_initializer,
-        name = name,
-        padding = padding,
-        use_bias = use_bias,
-        **kwargs
-      )(x)
-      x = keras.layers.MaxPool2D(
-        #name = name+"maxpool_1",
-        pool_size = pool_size, 
-        strides = pooling_stride,
-        padding = padding
-      )(x)
-    x =  tf.reshape(#name = name+'reshape_1',
-                      shape = (-1, tf.shape(x)[1]*tf.shape(x)[2], tf.shape(x)[3]),
-                      tensor = x)
-    return x
-
-  return apply
-
+# Feed Forward Network (FFN)
 
 def MLP_block(embedding_dim,
               mlp_ratio,
@@ -328,6 +244,46 @@ def MLP_block(embedding_dim,
     
     return apply
 
+# Transformer Block
+
+def Transformer_Block(num_layers, 
+                      mlp_ratio,
+                      num_heads,
+                      projection_dims,
+                      DropOut_rate = 0.1,
+                      LayerNormEpsilon = 1e-6):
+    def apply(inputs):
+        
+        x = inputs
+        
+        for Layer in range(num_layers):
+            
+            att = tf.keras.layers.LayerNormalization(
+			epsilon = LayerNormEpsilon
+		    )(x)
+            att = keras.layers.MultiHeadAttention(
+			num_heads = num_heads, 
+            key_dim = projection_dims,
+            dropout = DropOut_rate,
+            attention_axes = 1
+			)(att, att)
+            x = tf.keras.layers.Add()([att, x])
+        
+            mlp = tf.keras.layers.LayerNormalization(
+            epsilon = LayerNormEpsilon
+            )(x)
+            mlp = MLP_block(embedding_dim = projection_dims,
+                            mlp_ratio = mlp_ratio,
+                      DropOut = DropOut_rate 
+		    )(mlp)
+            x = tf.keras.layers.Add()([mlp, x]) 
+            
+            outputs = x
+        
+        return outputs
+    return apply
+    
+# Positional embedding
 
 def sinusodial_embedding(num_patches, embed_dim):
     
@@ -383,43 +339,3 @@ class add_positional_embedding():
     def __call__(self, input):
         input = tf.keras.layers.Add(name = 'add_positional_embedding')([input, self.positional_embedding]) # tf math add or concat? 
         return input
-        
-
-class extract_by_size():
-    def __init__(self, patch_size, padding = 'VALID'):
-        self.patch_size = patch_size
-        self.padding = padding
-        
-    def __call__(self, input):
-        x = tf.image.extract_patches( images = input, 
-                                  sizes = [1, self.patch_size, self.patch_size, 1],
-                                  strides = [1, self.patch_size, self.patch_size, 1],
-                                  rates = [1, 1, 1, 1],
-                                  padding = self.padding
-                                  )
-        return x
-
-
-class extract_by_patch():
-  def __init__(self, n_patches, padding = 'VALID'):
-    self.n_patches = n_patches
-    self.padding = padding
-
-  def get_overlap(self, image_size, n_patches):
-    from math import ceil
-    n_overlap = n_patches - 1
-    patch_size = ceil(image_size/ n_patches)
-    return patch_size, (n_patches*patch_size - image_size) // n_overlap
-    
-  
-  def __call__(self, inputs):
-    patch_size_x, overlap_x = self.get_overlap(image_size = tf.shape(inputs)[1], n_patches = self.n_patches )
-    patch_size_y, overlap_y = self.get_overlap(image_size = tf.shape(inputs)[2], n_patches = self.n_patches )
-    
-    result = tf.image.extract_patches(images = inputs,
-                           sizes=[1, patch_size_x, patch_size_y, 1],
-                           strides=[1, (patch_size_x - overlap_x), (patch_size_y - overlap_y), 1],
-                           rates=[1, 1, 1, 1],
-                           padding= self.padding)
-
-    return result

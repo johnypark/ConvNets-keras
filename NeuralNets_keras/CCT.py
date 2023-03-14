@@ -13,7 +13,8 @@ import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 import random
-from NeuralNets_keras.building_blocks import sinusodial_embedding, add_positional_embedding
+from NeuralNets_keras.building_blocks import sinusodial_embedding, add_positional_embedding, Transformer_Block, MLP_block
+from NeuralNets_keras.Tokenizer import *
 
 settings['positionalEmbedding'] = True
 settings['std_embedding'] = 0.2
@@ -26,131 +27,8 @@ settings['denseInitializer'] = 'glorot_uniform'
 settings['heads'] = 2
 settings['conv2DInitializer'] = 'he_normal'
 
-def Conv_Tokenizer(
-              kernel_size,
-              strides = 2, 
-              ##kernel_initializer,
-              activation = 'relu',
-              list_embedding_dims = [256], 
-              pool_size = 3,
-              pooling_stride = 2,
-              name = None,
-              padding = 'same',
-              use_bias = False,
-              **kwargs):
-  
-  def apply(inputs):
-    #strides = strides if strides is not None else max(1, (kernel_size // 2) - 1)
-    #padding = padding if padding is not None else max(1, (kernel_size // 2))
-    
-    x = inputs
-    num_conv_tokenizers = len(list_embedding_dims)
-    for k in range(num_conv_tokenizers):
-      x = keras.layers.Conv2D(
-        activation = activation,
-        filters = list_embedding_dims[k],
-        kernel_size = kernel_size,
-        strides = strides,
-        #kernel_initializer = kernel_initializer,
-        name = name,
-        padding = padding,
-        use_bias = use_bias,
-        **kwargs
-      )(x)
-      x = keras.layers.MaxPool2D(
-        #name = name+"maxpool_1",
-        pool_size = pool_size, 
-        strides = pooling_stride,
-        padding = padding
-      )(x)
-    x =  tf.reshape(#name = name+'reshape_1',
-                      shape = (-1, tf.shape(x)[3], tf.shape(x)[1]*tf.shape(x)[2]),
-                      tensor = x)
-    return x
 
-  return apply
-
-
-def Conv_TokenizerV2(
-              kernel_size,
-              strides = 2, 
-              ##kernel_initializer,
-              activation = 'relu',
-              list_embedding_dims = [256], 
-              pool_size = 3,
-              pooling_stride = 2,
-              name = None,
-              padding = 'same',
-              use_bias = False,
-              **kwargs):
-  
-  def apply(inputs):
-    #strides = strides if strides is not None else max(1, (kernel_size // 2) - 1)
-    #padding = padding if padding is not None else max(1, (kernel_size // 2))
-    
-    x = inputs
-    num_conv_tokenizers = len(list_embedding_dims)
-    for k in range(num_conv_tokenizers):
-      x = keras.layers.Conv2D(
-        activation = activation,
-        filters = list_embedding_dims[k],
-        kernel_size = kernel_size,
-        strides = strides,
-        #kernel_initializer = kernel_initializer,
-        name = name,
-        padding = padding,
-        use_bias = use_bias,
-        **kwargs
-      )(x)
-      x = keras.layers.MaxPool2D(
-        #name = name+"maxpool_1",
-        pool_size = pool_size, 
-        strides = pooling_stride,
-        padding = padding
-      )(x)
-    x =  tf.reshape(#name = name+'reshape_1',
-                      shape = (-1, tf.shape(x)[1]*tf.shape(x)[2], tf.shape(x)[3]),
-                      tensor = x)
-    return x
-
-  return apply
-
-
-def get_dim_Conv_Tokenizer(Conv_strides, pool_strides, num_tokenizer_ConvLayers):
-
-  def apply(input):
-
-    start = input
-    for k in range(num_tokenizer_ConvLayers):
-      Conv_out = -(start // -Conv_strides)
-      pool_out = -(Conv_out // - pool_strides)
-      start = pool_out
-    
-    return pool_out
-  return apply
-
-
-def MLP_block(embedding_dim,
-              mlp_ratio,
-              DropOut,
-              activation = 'gelu',
-              name = None):
-    
-    def apply(inputs):
-        x = inputs
-        x = keras.layers.Dense(units = int(embedding_dim*mlp_ratio))(x)
-        x = keras.layers.Activation(activation)(x)
-        x = keras.layers.Dropout(rate = DropOut)(x)
-        x = keras.layers.Dense(units = embedding_dim)(x)
-        x = keras.layers.Activation(activation)(x)
-        x = keras.layers.Dropout(rate = DropOut)(x)
-        
-        return x # here apply stochastic depth layer
-    
-    return apply
-
-
-def SeqPool(num_classes, settings, n_attn_channel = 1): 
+def SeqPool(settings, n_attn_channel = 1): 
     """ Learnable pooling layer. 
     In the paper they tested static pooling methods but learnable weighting is more effcient, 
     because each embedded patch does not contain the same amount of entropy. 
@@ -169,27 +47,13 @@ def SeqPool(num_classes, settings, n_attn_channel = 1):
         #x = tf.transpose(x, perm = [0, 2, 1])
         w_x = tf.matmul(x, x_init, transpose_a = True)
         w_x = tf.keras.layers.Flatten()(w_x)     
-        output = tf.keras.layers.Dense(
-            activation = None,
-            activity_regularizer = None,
-            bias_constraint = None,
-            bias_initializer = 'zeros',
-            bias_regularizer = None,
-            kernel_constraint = None,
-            kernel_initializer = settings['denseInitializer'],
-            kernel_regularizer = None,
-            #name = 'output',
-            units = num_classes,
-            use_bias = True
-        )(w_x)
-
-        return output
+        return w_x
 
     return apply
         
 
 ### CCT MODEL
-def CCT(classes, 
+def CCT(num_classes, 
         input_shape = (None, None, 3),
         num_TransformerLayers = 14,
         num_heads = 6,
@@ -213,6 +77,8 @@ def CCT(classes,
 		shape = input_shape)
     
     x = input
+    
+    ### Tokenize and Embed 
     x = Conv_Tokenizer(strides = tokenizer_strides, 
               kernel_size = tokenizer_kernel_size,
               #kernel_initializer = settings['conv2DInitializer'],
@@ -222,8 +88,6 @@ def CCT(classes,
               list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
     
     if positional_embedding: # this does not work!
-        
-        
       embedding = tf.random.truncated_normal(
 			shape = (tf.shape(x)[1], tf.shape(x)[2]),
 			mean = 0.0,
@@ -233,52 +97,40 @@ def CCT(classes,
                          settings['randomMax']),
 			name = 'learnable_embedding'
 		)
+      
     x = tf.keras.layers.Add()([x, embedding])
     x = tf.keras.layers.Dropout(settings['dropout'])(x)
+    
+    ### Transformer Blocks
     projection_dims = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
                                              pool_strides = 2, 
                                              num_tokenizer_ConvLayers = num_tokenizer_ConvLayers)(input_shape[0])
     projection_dims = projection_dims**2
-    ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
-	### transformer block layers
-    for k in range(num_TransformerLayers):
-        
-        att = tf.keras.layers.LayerNormalization(
-			epsilon = settings['epsilon'],
-			#name = f"transformer_{k}_norm"
-		)(x)
-        
-        att = keras.layers.MultiHeadAttention(
-			num_heads = num_heads, 
-            key_dim = projection_dims,
-            dropout = DropOut_rate,
-            attention_axes = 1
-			#name = f"transformer_{k}_attention"
-		)(att, att)
-        x = tf.keras.layers.Add()([att, x])
-        #x = tf.reshape(shape = (-1, tf.shape(x)[2], tf.shape(x)[1]),
-        #              tensor = x)
-        x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
-        mlp_out = MLP_block(embedding_dim = projection_dims,
-                            mlp_ratio = mlp_ratio,
-                      DropOut = DropOut_rate 
-		)(x)
-        x = tf.keras.layers.Add()([mlp_out, x]) # do a stochastic depth layer here 
-        #x = tf.reshape(shape = (-1, tf.shape(x)[2], tf.shape(x)[1]),
-        #              tensor = x)
-
-    #### Sequence Pooling ####
     
-    output = SeqPool(num_classes = classes,
-                     settings = settings,
+    x = Transformer_Block(num_layers = num_TransformerLayers, 
+                      mlp_ratio = mlp_ratio,
+                      num_heads = num_heads,
+                      projection_dims = projection_dims,
+                      DropOut_rate = 0.1,
+                      LayerNormEpsilon = settings['epsilon'])(x)
+    
+    ### Sequence Pooling ####
+    penultimate = SeqPool(settings = settings,
                      n_attn_channel = n_SeqPool_weights)(x)
+    ### Classification Head
+    outputs = tf.keras.layers.Dense(
+            activation = 'softmax',
+            kernel_initializer = settings['denseInitializer'],
+            #name = 'output',
+            units = num_classes,
+            use_bias = True
+        )(penultimate)
     
-    return tf.keras.Model(inputs = input, outputs = output)
-
+    return tf.keras.Model(inputs = input, outputs = outputs)
 
 
 ### CCT MODEL
-def CCTV2(classes, 
+def CCTV2(num_classes, 
         input_shape = (None, None, 3),
         num_TransformerLayers = 14,
         num_heads = 6,
@@ -301,10 +153,6 @@ def CCTV2(classes,
     input = tf.keras.layers.Input(
 		shape = input_shape)
     
-    patch_size = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
-                                             pool_strides = 2, 
-                                             num_tokenizer_ConvLayers = num_tokenizer_ConvLayers)(input_shape[0])
-    seq_length = patch_size**2
     x = input
     x = Conv_TokenizerV2(strides = tokenizer_strides, 
               kernel_size = tokenizer_kernel_size,
@@ -314,43 +162,35 @@ def CCTV2(classes,
               pooling_stride = 2,
               list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
     
-    if positional_embedding: # this does not work!
+    if positional_embedding:
+        patch_size = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
+                                             pool_strides = 2, 
+                                             num_tokenizer_ConvLayers = num_tokenizer_ConvLayers)(input_shape[0])
+        seq_length = patch_size**2
         x = add_positional_embedding(patch_length = seq_length , 
                                embedding_dim = embedding_dim,
-                               embedding_type = 'sinusodial')(x)
-        
+                               embedding_type = 'sinusodial')(x)    
     x = tf.keras.layers.Dropout(settings['dropout'])(x)
-    #projection_dims = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 
-    #                                         pool_strides = 2, 
-    #                                         num_tokenizer_ConvLayers = num_tokenizer_ConvLayers)(input_shape[0])
-    projection_dims = embedding_dim
-    ### dpr = [x for x in np.linspace(0, settings['stochasticDepthRate'], settings['transformerLayers'])] ### calculate stochastic depth probabilities
-	### transformer block layers
-    for k in range(num_TransformerLayers):
-        
-        att = tf.keras.layers.LayerNormalization(
-			epsilon = settings['epsilon'],
-			#name = f"transformer_{k}_norm"
-		)(x)
-        
-        att = keras.layers.MultiHeadAttention(
-			num_heads = num_heads, 
-            key_dim = projection_dims,
-            dropout = DropOut_rate,
-			#name = f"transformer_{k}_attention"
-		)(att, att)
-        x = tf.keras.layers.Add()([att, x])
-        x = tf.keras.layers.LayerNormalization(epsilon = settings['epsilon'])(x)
-        mlp_out = MLP_block(embedding_dim = projection_dims,
-                            mlp_ratio = mlp_ratio,
-                      DropOut = DropOut_rate 
-		)(x)
-        x = tf.keras.layers.Add()([mlp_out, x]) # do a stochastic depth layer here 
-
-    #### Sequence Pooling ####
     
-    output = SeqPool(num_classes = classes,
-                     settings = settings,
-                     n_attn_channel= n_SeqPool_weights)(x)
+    ### Transformer Blocks
+    x = Transformer_Block(num_layers = num_TransformerLayers, 
+                      mlp_ratio = mlp_ratio,
+                      num_heads = num_heads,
+                      projection_dims = embedding_dim,
+                      DropOut_rate = settings['dropout'],
+                      LayerNormEpsilon = settings['epsilon'],
+                      )(x)
     
-    return tf.keras.Model(inputs = input, outputs = output)
+    ### Sequence Pooling ####
+    penultimate = SeqPool(settings = settings,
+                     n_attn_channel = n_SeqPool_weights)(x)
+    
+    ### Classification Head
+    outputs = tf.keras.layers.Dense(
+            activation = 'softmax',
+            kernel_initializer = settings['denseInitializer'],
+            units = num_classes,
+            use_bias = True
+        )(penultimate)
+    
+    return tf.keras.Model(inputs = input, outputs = outputs)

@@ -93,7 +93,7 @@ def CCTV2(num_classes,
               activation = 'relu',
               pool_size = 3,
               pooling_stride = 2,
-              list_embedding_dim = Tokenizer_ConvLayers_dims)(x)
+              list_embedding_dims = Tokenizer_ConvLayers_dims)(x)
     
     if positional_embedding:
         edge_length = get_dim_Conv_Tokenizer(Conv_strides = tokenizer_strides, 

@@ -125,7 +125,7 @@ def Conv_TokenizerV2(
             strides = pooling_stride,
             padding = padding
             )(x)
-        x =  einops.rearrange(x, 'b w h c -> b (w h) c')
+        x =  tf.reshape(x, shape=[tf.shape(x)[0], -1, tf.shape(x)[-1]])
         
         return x
 

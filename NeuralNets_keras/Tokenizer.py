@@ -3,6 +3,7 @@
 # Patch Generators        
 import tensorflow as tf
 import tensorflow.keras as keras
+import einops
 
 
 class extract_by_size():
@@ -81,9 +82,8 @@ def Conv_Tokenizer(
             strides = pooling_stride,
             padding = padding
             )(x)
-        x =  tf.reshape(#name = name+'reshape_1',
-                      shape = (-1, tf.shape(x)[3], tf.shape(x)[1]*tf.shape(x)[2]),
-                      tensor = x)
+        x =  einops.rearrange(x, 'b w h c -> b (w h) c')
+        
         return x
     return apply
 
@@ -125,9 +125,8 @@ def Conv_TokenizerV2(
             strides = pooling_stride,
             padding = padding
             )(x)
-        x =  tf.reshape(#name = name+'reshape_1',
-                      shape = (-1, tf.shape(x)[1]*tf.shape(x)[2], tf.shape(x)[3]),
-                      tensor = x)
+        x =  einops.rearrange(x, 'b w h c -> b (w h) c')
+        
         return x
 
     return apply

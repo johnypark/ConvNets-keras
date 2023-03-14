@@ -223,6 +223,72 @@ def SqueezeBlock(channels,
     
     return apply
 
+# MHSA layer 
+# Adopted from: https://github.com/faustomorales/vit-keras/blob/master/vit_keras/utils.py
+# Also learn: https://keras.io/guides/making_new_layers_and_models_via_subclassing/
+
+class MultiHeadSelfAttention(keras.layers.Layer):
+    def __init__(self, *args, num_heads, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.num_heads = num_heads
+
+    def build(self, input_shape):
+        hidden_size = input_shape[-1]
+        num_heads = self.num_heads
+        if hidden_size % num_heads !=0:
+          raise ValueError(
+              f"embedding dimension = {hidden_size} should be divisible by number of heads = {num_heads}"
+              )
+        self.hidden_size = hidden_size
+        self.projection_dim = hidden_size // num_heads
+        self.query_dense = keras.layers.Dense(hidden_size, name = "query")
+        self.key_dense = keras.layers.Dense(hidden_size, name = "key")
+        self.value_dense = keras.layers.Dense(hidden_size, name = "value")
+        self.combine_heads = keras.layers.Dense(hidden_size, name = "out")
+
+    def attention(self, query, key, value):
+        score = tf.matmul(query, key, transpose_b = True)
+        dim_key = tf.cast(tf.shape(key)[-1], dtype = score.dtype)
+        scaled_score = score / tf.math.sqrt(dim_key)
+        weights = tf.nn.softmax(scaled_score, axis = -1)
+        output = tf.matmul(weights, value)
+        return output, weights
+
+    def separate_heads(self, x, batch_size):
+        x = tf.reshape(
+                      tensor = x, 
+                      shape = (batch_size, -1, self.num_heads, self.projection_dim)
+                      )
+        return tf.transpose(x, perm = [0, 2, 1, 3])
+
+    def call(self, inputs):
+        batch_size = tf.shape(inputs)[0]
+
+        query = self.query_dense(inputs)
+        key = self.key_dense(inputs)
+        value = self.value_dense(inputs)
+
+        query = self.separate_heads(query, batch_size)
+        key = self.separate_heads(key, batch_size)
+        value = self.separate_heads(value, batch_size)
+        
+        attention, weights = self.attention(query, key, value)
+        attention = tf.transpose(attention, perm = [0, 2, 1, 3])
+        concat_attention = tf.reshape(attention, 
+                                      shape = (batch_size, -1, self.hidden_size)
+                                      )
+        output = self.combine_heads(concat_attention)
+        return output, weights
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"num_heads": self.num_heads})
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+        
 # Feed Forward Network (FFN)
 
 def MLP_block(embedding_dim,
@@ -261,14 +327,11 @@ def Transformer_Block(num_layers,
             att = tf.keras.layers.LayerNormalization(
 			epsilon = LayerNormEpsilon
 		    )(x)
-            att = keras.layers.MultiHeadAttention(
-			num_heads = num_heads, 
-            key_dim = projection_dims,
-            dropout = DropOut_rate,
-            attention_axes = 1
-			)(att, att)
+            att = MultiHeadSelfAttention(
+			num_heads = num_heads
+			)(att)
             x = tf.keras.layers.Add()([att, x])
-        
+            x = tf.keras.layers.Dropout(rate = DropOut_rate)(x)
             mlp = tf.keras.layers.LayerNormalization(
             epsilon = LayerNormEpsilon
             )(x)

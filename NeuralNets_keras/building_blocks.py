@@ -52,7 +52,7 @@ class StochasticDepth(tf.keras.layers.Layer):
         self.identity = tf.keras.layers.Lambda(lambda x: x)
 
 
-    def call(self, inputs, training=None):
+    def call(self, inputs, training = None):
         if training:
     
         # Random bernoulli variable indicating whether the branch should be kept or not or not
@@ -420,8 +420,7 @@ def MLP_block(embedding_dim,
 
 # Transformer Block
 
-def Transformer_Block(num_layers, 
-                      mlp_ratio,
+def Transformer_Block(mlp_ratio,
                       num_heads,
                       projection_dims,
                       stochastic_depth_rate = 0.1,
@@ -430,33 +429,33 @@ def Transformer_Block(num_layers,
     def apply(inputs):
         
         x = inputs
+        
         Bernoulli = StochasticDepth(
             survival_probability = (1-stochastic_depth_rate))
         
-        for Layer in range(num_layers):
-            
-            att = tf.keras.layers.LayerNormalization(
+        # Attention
+        att = tf.keras.layers.LayerNormalization(
 			epsilon = LayerNormEpsilon
 		    )(x)
-            att = MultiHeadSelfAttention(
+        att = MultiHeadSelfAttention(
 			num_heads = num_heads,
             DropOut_rate = DropOut_rate
 			)(att)
-            pass1 = Bernoulli(att)
-            att_output = tf.keras.layers.Add()([x, pass1])
-            
-            x1 = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
-            mlp = tf.keras.layers.LayerNormalization(
+        pass1 = Bernoulli(att)
+        att_output = tf.keras.layers.Add()([x, pass1])
+        
+        #Feed Forward Network    
+        x1 = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
+        mlp = tf.keras.layers.LayerNormalization(
             epsilon = LayerNormEpsilon
             )(x1)
-            mlp = MLP_block(embedding_dim = projection_dims,
+        mlp = MLP_block(embedding_dim = projection_dims,
                             mlp_ratio = mlp_ratio,
                       DropOut_rate = DropOut_rate 
 		    )(mlp)
-            pass2 = Bernoulli(mlp)
-            x = tf.keras.layers.Add()([x1, pass2]) 
-            
-        output = x            
+        pass2 = Bernoulli(mlp)
+        output = tf.keras.layers.Add()([x1, pass2]) 
+                      
         return output
     
     return apply

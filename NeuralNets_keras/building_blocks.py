@@ -48,11 +48,7 @@ class StochasticDepth(tf.keras.layers.Layer):
 
         self.survival_probability = survival_probability
 
-    def call(self, x, training=None):
-        if not isinstance(x, list) or len(x) != 2:
-            raise ValueError("input must be a list of length 2.")
-
-        shortcut, residual = x
+    def call(self, inputs, training=None):
 
         # Random bernoulli variable indicating whether the branch should be kept or not or not
         b_out = keras.backend.random_bernoulli(
@@ -60,10 +56,10 @@ class StochasticDepth(tf.keras.layers.Layer):
         )
 
         def _call_train():
-            return tf.keras.layers.Add()([shortcut, b_out * residual])
+            return b_out * inputs
 
         def _call_test():
-            return tf.keras.layers.Add()([shortcut, residual])
+            return inputs
 
         return tf.keras.backend.in_train_phase(
             _call_train, _call_test, training=training
@@ -436,7 +432,7 @@ def Transformer_Block(num_layers,
     def apply(inputs):
         
         x = inputs
-        BernoulliAdd = StochasticDepth(
+        Bernoulli = StochasticDepth(
             survival_probability = (1-stochastic_depth_rate))
         
         for Layer in range(num_layers):
@@ -448,9 +444,9 @@ def Transformer_Block(num_layers,
 			num_heads = num_heads,
             DropOut_rate = DropOut_rate
 			)(att)
+            att = Bernoulli(att)
             att_output = tf.keras.layers.Add()([x, att])
-            #att_output = BernoulliAdd([x, att])
-
+            
             x1 = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
             mlp = tf.keras.layers.LayerNormalization(
             epsilon = LayerNormEpsilon
@@ -459,8 +455,8 @@ def Transformer_Block(num_layers,
                             mlp_ratio = mlp_ratio,
                       DropOut_rate = DropOut_rate 
 		    )(mlp)
+            mlp = Bernoulli(mlp)
             x = tf.keras.layers.Add()([x1, mlp]) 
-            #x = BernoulliAdd([x1, mlp])
             
         output = x            
         return output

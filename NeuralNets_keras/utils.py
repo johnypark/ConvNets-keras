@@ -10,19 +10,18 @@ from keras.utils import tf_utils
 ## from https://github.com/keras-team/keras/blob/e6784e4302c7b8cd116b74a784f4b78d60e83c26/keras/layers/merging/base_merge.py#L1
 
 class DropConnect(keras.layers.Layer):
-    def __init__(self, rate, data_type =tf.float32, **kwargs):
+    def __init__(self, rate, **kwargs):
         super(DropConnect, self).__init__(**kwargs)
-        self.rate = rate
-        self.data_type = data_type
+        self.rate = rate # Need to match input data type
 
     def build(self, input_shape):
         shape = input_shape[-1] 
         # Sample Bernoulli Random Variable
-        boolean = tf.random.uniform(shape =(1,), minval=0, maxval = 1) > self.rate
+        boolean = tf.random.uniform(shape =(1,), minval = 0, maxval = 1) > self.rate
         # Make mask_matrix
         mask_matrix = tf.repeat(boolean, shape*shape)
         mask_matrix = tf.reshape(mask_matrix, (shape, shape))
-        mask_matrix = tf.cast(mask_matrix, dtype = self.data_type)
+        mask_matrix = tf.cast(mask_matrix, dtype = self.compute_dtype)
         # Apply mask to the input
         self.StochasticDrop = keras.layers.Lambda(lambda x: tf.matmul(x, mask_matrix))
 

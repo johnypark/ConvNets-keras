@@ -29,7 +29,9 @@ from tensorflow import keras
 from einops import rearrange
 #import tensorflow_probability as tfp
 
-
+#stochastic depth:
+#Dropout with noise_shape = (B, 1, 1, 1) or (B, 1,)
+# https://stackoverflow.com/questions/65888642/how-to-implement-stochastic-depth-and-randomly-dropout-an-entire-convolutional
 
 KERNEL_INIT = {
     "class_name": "VarianceScaling",
@@ -406,12 +408,12 @@ def Transformer_Block(mlp_ratio,
 			num_heads = num_heads,
             DropOut_rate = DropOut_rate
 			)(LN_output1)
-        pass1 = tf.keras.layers.Dropout(
+        att = tf.keras.layers.Dropout(
                 stochastic_depth_rate,
                 noise_shape=(None, 1, 1),
                 name="stochastic_depth_att",
             )(att)
-        att_output = tf.keras.layers.Add()([x, pass1])
+        att_output = tf.keras.layers.Add()([x, att])
         att_output_DO = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
         
         #Feed Forward Network
@@ -423,12 +425,12 @@ def Transformer_Block(mlp_ratio,
                             mlp_ratio = mlp_ratio,
                       DropOut_rate = DropOut_rate 
 		    )(LN_output2)
-        pass2 = tf.keras.layers.Dropout( #drop connect: from https://github.com/keras-team/keras/blob/v2.11.0/keras/applications/resnet_rs.py#L438
+        mlp = tf.keras.layers.Dropout( #drop connect: from https://github.com/keras-team/keras/blob/v2.11.0/keras/applications/resnet_rs.py#L438
                 stochastic_depth_rate,
                 noise_shape=(None, 1, 1),
                 name="stochastic_depth_mlp",
             )(mlp)
-        output = tf.keras.layers.Add()([x1, pass2]) 
+        output = tf.keras.layers.Add()([x1, mlp]) 
                       
         return output
     

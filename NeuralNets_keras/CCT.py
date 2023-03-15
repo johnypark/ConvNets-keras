@@ -127,7 +127,7 @@ def CCTV2(num_classes,
                      n_attn_channel = n_SeqPool_weights)(TFL[num_TransformerLayers])
     
     if add_top:
-        penultimate = tf.keras.layers.Dense(final_DropOut_rate)(penultimate)
+        penultimate = tf.keras.layers.Dropout(final_DropOut_rate)(penultimate)
     
         ### Classification Head
         outputs = tf.keras.layers.Dense(

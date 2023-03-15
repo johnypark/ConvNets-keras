@@ -27,6 +27,8 @@ import tensorflow_addons as tfa
 import json
 from tensorflow import keras
 from einops import rearrange
+#import tensorflow_probability as tfp
+
 
 
 KERNEL_INIT = {
@@ -38,6 +40,7 @@ KERNEL_INIT = {
     }} #from resnet-rs
 
 # modified from tensorflow addons https://github.com/tensorflow/addons/blob/v0.17.0/tensorflow_addons/layers/stochastic_depth.py#L5-L90
+@tf.keras.utils.register_keras_serializable()
 class StochasticDepth(tf.keras.layers.Layer):
 
     def __init__(self, survival_probability: float = 0.9, **kwargs):
@@ -53,7 +56,7 @@ class StochasticDepth(tf.keras.layers.Layer):
 
         # Random bernoulli variable indicating whether the branch should be kept or not or not
         b_out = keras.backend.random_bernoulli(
-            [], p=self.survival_probability
+            [], p=self.survival_probability, dtype=self._compute_dtype_object
         )
 
         def _call_train():

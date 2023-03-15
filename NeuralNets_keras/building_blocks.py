@@ -60,10 +60,10 @@ class StochasticDepth(tf.keras.layers.Layer):
         )
 
         def _call_train():
-            return tf.keras.layers.Add()(shortcut, b_out * residual)
+            return tf.keras.layers.Add()([shortcut, b_out * residual])
 
         def _call_test():
-            return tf.keras.layers.Add()(shortcut, residual)
+            return tf.keras.layers.Add()([shortcut, residual])
 
         return tf.keras.backend.in_train_phase(
             _call_train, _call_test, training=training

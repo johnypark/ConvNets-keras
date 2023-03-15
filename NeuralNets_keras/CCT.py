@@ -75,11 +75,14 @@ def CCTV2(num_classes,
         DropOut_rate = 0.1,
         settings = settings,
         n_SeqPool_weights = 1,
-        positional_embedding = True):
+        positional_embedding = True,
+        embedding_type = 'learnable'):
 
     """ CCT-L/PxT: L transformer encoder layers and PxP patch size.
     In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
     CCT-14/7x2 also made SOTA 99.76% top-1 for transfer learning to Flowers-102, which makes it a promising candidate for fine-grained classification
+    
+    embedding_type: learnable or sinusodial
     """
     Tokenizer_ConvLayers_dims = [embedding_dim//2**(i) for i in reversed(range(num_tokenizer_ConvLayers))]
     # Need to add tokenizer settings
@@ -102,7 +105,7 @@ def CCTV2(num_classes,
         num_patches = edge_length**2
         x = add_positional_embedding(num_patches = num_patches, 
                                embedding_dim = embedding_dim,
-                               embedding_type = 'sinusodial')(x)    
+                               embedding_type = embedding_type)(x)    
     x = tf.keras.layers.Dropout(settings['dropout'])(x)
     
     ### Transformer Blocks

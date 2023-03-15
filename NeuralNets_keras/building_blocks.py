@@ -229,10 +229,11 @@ def SqueezeBlock(channels,
 # Also learn: https://keras.io/guides/making_new_layers_and_models_via_subclassing/
 
 class MultiHeadSelfAttention(keras.layers.Layer):
-    def __init__(self, *args, num_heads, output_weight = False, **kwargs):
+    def __init__(self, *args, num_heads, DropOut_rate = 0.1, output_weight = False, **kwargs):
         super().__init__(*args, **kwargs)
         self.num_heads = num_heads
         self.output_weight = output_weight
+        self.DropOut_rate = DropOut_rate
 
     def build(self, input_shape):
         hidden_size = input_shape[-1]
@@ -247,12 +248,14 @@ class MultiHeadSelfAttention(keras.layers.Layer):
         self.key_dense = keras.layers.Dense(hidden_size, name = "key")
         self.value_dense = keras.layers.Dense(hidden_size, name = "value")
         self.combine_heads = keras.layers.Dense(hidden_size, name = "out")
+        self.Dropout = keras.layers.Dropout(rate = self.DropOut_rate)
 
-    def attention(self, query, key, value):
+    def ScaledDotProductAttention(self, query, key, value):
         score = tf.matmul(query, key, transpose_b = True)
         dim_key = tf.cast(tf.shape(key)[-1], dtype = score.dtype)
         scaled_score = score / tf.math.sqrt(dim_key)
         weights = tf.nn.softmax(scaled_score, axis = -1)
+        weights = self.Dropout(weights)
         output = tf.matmul(weights, value)
         return output, weights
 
@@ -274,12 +277,13 @@ class MultiHeadSelfAttention(keras.layers.Layer):
         key = self.separate_heads(key, batch_size)
         value = self.separate_heads(value, batch_size)
         
-        attention, weights = self.attention(query, key, value)
-        attention = tf.transpose(attention, perm = [0, 2, 1, 3])
-        concat_attention = tf.reshape(attention, 
+        weighted_value, weights = self.ScaledDotProductAttention(query, key, value)
+        weighted_value = tf.transpose(weighted_value, perm = [0, 2, 1, 3])
+        multihead_values = tf.reshape(weighted_value, 
                                       shape = (batch_size, -1, self.hidden_size)
                                       )
-        output = self.combine_heads(concat_attention)
+        output = self.combine_heads(multihead_values)
+        output = self.Dropout(output)
         
         if self.output_weight:
             output = output, weights
@@ -360,7 +364,7 @@ class Attention(tf.keras.layers.Layer):
 
 def MLP_block(embedding_dim,
               mlp_ratio,
-              DropOut,
+              DropOut_rate,
               activation = 'gelu',
               name = None):
     
@@ -368,10 +372,10 @@ def MLP_block(embedding_dim,
         x = inputs
         x = keras.layers.Dense(units = int(embedding_dim*mlp_ratio))(x)
         x = keras.layers.Activation(activation)(x)
-        x = keras.layers.Dropout(rate = DropOut)(x)
+        x = keras.layers.Dropout(rate = DropOut_rate)(x)
         x = keras.layers.Dense(units = embedding_dim)(x)
         x = keras.layers.Activation(activation)(x)
-        x = keras.layers.Dropout(rate = DropOut)(x)
+        x = keras.layers.Dropout(rate = DropOut_rate)(x)
         
         return x # here apply stochastic depth layer
     
@@ -383,30 +387,36 @@ def Transformer_Block(num_layers,
                       mlp_ratio,
                       num_heads,
                       projection_dims,
+                      stochastic_depth_rate = 0.1,
                       DropOut_rate = 0.1,
                       LayerNormEpsilon = 1e-6):
     def apply(inputs):
         
         x = inputs
-        
+        BernoulliAdd = tfa.layers.StochasticDepth(
+            survival_probability = (1-stochastic_depth_rate))
         for Layer in range(num_layers):
             
             att = tf.keras.layers.LayerNormalization(
 			epsilon = LayerNormEpsilon
 		    )(x)
             att = MultiHeadSelfAttention(
-			num_heads = num_heads
+			num_heads = num_heads,
+            DropOut_rate = DropOut_rate
 			)(att)
-            x = tf.keras.layers.Add()([att, x])
+            #x = tf.keras.layers.Add()([x, att])
+            x = BernoulliAdd([x, att])
+
             x = tf.keras.layers.Dropout(rate = DropOut_rate)(x)
             mlp = tf.keras.layers.LayerNormalization(
             epsilon = LayerNormEpsilon
             )(x)
             mlp = MLP_block(embedding_dim = projection_dims,
                             mlp_ratio = mlp_ratio,
-                      DropOut = DropOut_rate 
+                      DropOut_rate = DropOut_rate 
 		    )(mlp)
-            x = tf.keras.layers.Add()([mlp, x]) 
+            #x = tf.keras.layers.Add()([mlp, x]) 
+            x = BernoulliAdd([x, mlp])
             
             outputs = x
         

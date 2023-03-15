@@ -417,10 +417,10 @@ def Transformer_Block(num_layers,
 		    )(mlp)
             #x = tf.keras.layers.Add()([mlp, x]) 
             mlp_output = BernoulliAdd([x1, mlp])
-            
-            outputs = mlp_output
-        
-        return outputs
+            output = tf.keras.layers.Dropout(rate = DropOut_rate)(mlp_output)
+                    
+        return output
+    
     return apply
     
 # Positional embedding

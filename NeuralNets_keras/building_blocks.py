@@ -49,7 +49,7 @@ class StochasticDepth(tf.keras.layers.Layer):
         self.survival_probability = survival_probability
         
     def build(self, input_shape):
-        self.shape = (input_shape[0],) + (1,)*(input_shape[0] - 1)
+        self.shape = (input_shape[0],) + (1,)*(input_shape.shape[0] - 1)
 
 # Referred from: github.com:rwightman/pytorch-image-models.
     def call(self, inputs, training=None):

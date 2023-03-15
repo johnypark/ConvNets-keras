@@ -37,6 +37,46 @@ KERNEL_INIT = {
         "distribution": "truncated_normal",
     }} #from resnet-rs
 
+# modified from tensorflow addons https://github.com/tensorflow/addons/blob/v0.17.0/tensorflow_addons/layers/stochastic_depth.py#L5-L90
+class StochasticDepth(tf.keras.layers.Layer):
+
+    def __init__(self, survival_probability: float = 0.9, **kwargs):
+        super().__init__(**kwargs)
+
+        self.survival_probability = survival_probability
+
+    def call(self, x, training=None):
+        if not isinstance(x, list) or len(x) != 2:
+            raise ValueError("input must be a list of length 2.")
+
+        shortcut, residual = x
+
+        # Random bernoulli variable indicating whether the branch should be kept or not or not
+        b_out = keras.backend.random_bernoulli(
+            [], p=self.survival_probability
+        )
+
+        def _call_train():
+            return tf.keras.layers.Add()(shortcut, b_out * residual)
+
+        def _call_test():
+            return tf.keras.layers.Add()(shortcut, residual)
+
+        return tf.keras.backend.in_train_phase(
+            _call_train, _call_test, training=training
+        )
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0]
+
+    def get_config(self):
+        base_config = super().get_config()
+
+        config = {"survival_probability": self.survival_probability}
+
+        return {**base_config, **config}
+    
+    
 def ConvBlock(filters,
               kernel_size,
               strides = 1,
@@ -393,7 +433,7 @@ def Transformer_Block(num_layers,
     def apply(inputs):
         
         x = inputs
-        BernoulliAdd = tfa.layers.StochasticDepth(
+        BernoulliAdd = StochasticDepth(
             survival_probability = (1-stochastic_depth_rate))
         
         for Layer in range(num_layers):
@@ -417,9 +457,8 @@ def Transformer_Block(num_layers,
                       DropOut_rate = DropOut_rate 
 		    )(mlp)
             #x = tf.keras.layers.Add()([mlp, x]) 
-            mlp_output = BernoulliAdd([x1, mlp])
-            x = tf.keras.layers.Dropout(rate = DropOut_rate)(mlp_output)
-        
+            x = BernoulliAdd([x1, mlp])
+            
         output = x            
         return output
     

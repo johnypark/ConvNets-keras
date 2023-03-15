@@ -6,7 +6,7 @@ from tensorflow import keras
 # modified from tensorflow addons https://github.com/tensorflow/addons/blob/v0.17.0/tensorflow_addons/layers/stochastic_depth.py#L5-L90
 class StochasticDepth(tf.keras.layers.Layer):
 
-    def __init__(self, survival_probability: float = 0.5, **kwargs):
+    def __init__(self, survival_probability: float = 0.9, **kwargs):
         super().__init__(**kwargs)
 
         self.survival_probability = survival_probability

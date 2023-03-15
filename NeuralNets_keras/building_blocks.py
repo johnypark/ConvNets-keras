@@ -47,23 +47,21 @@ class StochasticDepth(tf.keras.layers.Layer):
         super().__init__(**kwargs)
 
         self.survival_probability = survival_probability
+        
+    def build(self, input_shape):
+        self.identity = tf.keras.layers.Lambda(lambda x: x)
+
 
     def call(self, inputs, training=None):
-
+        if training:
+    
         # Random bernoulli variable indicating whether the branch should be kept or not or not
-        b_out = keras.backend.random_bernoulli(
+            b_out = keras.backend.random_bernoulli(
             [], p=self.survival_probability, dtype=self._compute_dtype_object
-        )
+            )
+            return b_out * self.identity(inputs)
 
-        def _call_train():
-            return b_out * inputs
-
-        def _call_test():
-            return inputs
-
-        return tf.keras.backend.in_train_phase(
-            _call_train, _call_test, training=training
-        )
+        return self.identity(inputs)
 
     def compute_output_shape(self, input_shape):
         return input_shape[0]

@@ -76,7 +76,9 @@ def CCTV2(num_classes,
         settings = settings,
         n_SeqPool_weights = 1,
         positional_embedding = True,
-        embedding_type = 'learnable'):
+        embedding_type = 'learnable',
+        add_top = True,
+        final_DropOut_rate = 0.3):
 
     """ CCT-L/PxT: L transformer encoder layers and PxP patch size.
     In their paper, CCT-14/7x2 reached 80.67% Top-1 accruacy with 22.36M params, with 300 training epochs wo extra data
@@ -124,12 +126,18 @@ def CCTV2(num_classes,
     penultimate = SeqPool(settings = settings,
                      n_attn_channel = n_SeqPool_weights)(TFL[num_TransformerLayers])
     
-    ### Classification Head
-    outputs = tf.keras.layers.Dense(
+    if add_top:
+        penultimate = tf.keras.layers.Dense(final_DropOut_rate)(penultimate)
+    
+        ### Classification Head
+        outputs = tf.keras.layers.Dense(
             activation = 'softmax',
             kernel_initializer = settings['denseInitializer'],
             units = num_classes,
             use_bias = True
         )(penultimate)
+        
+    else:
+        outputs = penultimate
     
     return tf.keras.Model(inputs = input, outputs = outputs)

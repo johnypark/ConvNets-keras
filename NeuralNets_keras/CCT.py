@@ -73,6 +73,7 @@ def CCTV2(num_classes,
         tokenizer_strides = 2,
         num_tokenizer_ConvLayers = 2,
         DropOut_rate = 0.1,
+        stochastic_depth_rate = 0.1,
         settings = settings,
         n_SeqPool_weights = 1,
         positional_embedding = True,
@@ -106,14 +107,15 @@ def CCTV2(num_classes,
         x = add_positional_embedding(num_patches = num_patches, 
                                embedding_dim = embedding_dim,
                                embedding_type = embedding_type)(x)    
-    x = tf.keras.layers.Dropout(settings['dropout'])(x)
+    x = tf.keras.layers.Dropout(rate = DropOut_rate)(x)
     
     ### Transformer Blocks
     x = Transformer_Block(num_layers = num_TransformerLayers, 
                       mlp_ratio = mlp_ratio,
                       num_heads = num_heads,
                       projection_dims = embedding_dim,
-                      DropOut_rate = settings['dropout'],
+                      DropOut_rate = DropOut_rate,
+                      stochastic_depth_rate = stochastic_depth_rate,
                       LayerNormEpsilon = settings['epsilon'],
                       )(x)
     

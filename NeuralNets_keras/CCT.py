@@ -110,18 +110,20 @@ def CCTV2(num_classes,
     x = tf.keras.layers.Dropout(rate = DropOut_rate)(x)
     
     ### Transformer Blocks
+    TFL = dict()
+    TFL[0] = x
     for L in range(num_TransformerLayers):
-        x = Transformer_Block(mlp_ratio = mlp_ratio,
+        TFL[L+1] = Transformer_Block(mlp_ratio = mlp_ratio,
                       num_heads = num_heads,
                       projection_dims = embedding_dim,
                       DropOut_rate = DropOut_rate,
                       stochastic_depth_rate = stochastic_depth_rate,
                       LayerNormEpsilon = settings['epsilon'],
-                      )(x)
+                      )(TFL[L])
         
     ### Sequence Pooling ####
     penultimate = SeqPool(settings = settings,
-                     n_attn_channel = n_SeqPool_weights)(x)
+                     n_attn_channel = n_SeqPool_weights)(TFL[num_TransformerLayers])
     
     ### Classification Head
     outputs = tf.keras.layers.Dense(

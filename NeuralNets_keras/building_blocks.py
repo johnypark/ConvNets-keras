@@ -434,25 +434,26 @@ def Transformer_Block(mlp_ratio,
             survival_probability = (1-stochastic_depth_rate))
         
         # Attention
-        att = tf.keras.layers.LayerNormalization(
+        LN_output1 = tf.keras.layers.LayerNormalization(
 			epsilon = LayerNormEpsilon
-		    )(x)
+		    )(inputs)
         att = MultiHeadSelfAttention(
 			num_heads = num_heads,
             DropOut_rate = DropOut_rate
-			)(att)
+			)(LN_output1)
         pass1 = Bernoulli(att)
         att_output = tf.keras.layers.Add()([x, pass1])
+        att_output_DO = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
         
-        #Feed Forward Network    
-        x1 = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
-        mlp = tf.keras.layers.LayerNormalization(
+        #Feed Forward Network
+        x1 = att_output_DO
+        LN_output2 = tf.keras.layers.LayerNormalization(
             epsilon = LayerNormEpsilon
-            )(x1)
+            )(att_output_DO)
         mlp = MLP_block(embedding_dim = projection_dims,
                             mlp_ratio = mlp_ratio,
                       DropOut_rate = DropOut_rate 
-		    )(mlp)
+		    )(LN_output2)
         pass2 = Bernoulli(mlp)
         output = tf.keras.layers.Add()([x1, pass2]) 
                       

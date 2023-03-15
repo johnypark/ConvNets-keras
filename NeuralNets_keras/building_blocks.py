@@ -38,33 +38,6 @@ KERNEL_INIT = {
         "mode": "fan_out",
         "distribution": "truncated_normal",
     }} #from resnet-rs
-
-# modified from tensorflow addons https://github.com/tensorflow/addons/blob/v0.17.0/tensorflow_addons/layers/stochastic_depth.py#L5-L90
-@tf.keras.utils.register_keras_serializable()
-class StochasticDepth(tf.keras.layers.Layer):
-
-    def __init__(self, survival_probability: float = 0.9, **kwargs):
-        super().__init__(**kwargs)
-
-        self.survival_probability = survival_probability
-
-# Referred from: github.com:rwightman/pytorch-image-models.
-    def call(self, inputs, training=None):
-        if training:
-            keep_prob = self.survival_probability
-            shape = (tf.shape(inputs)[0],) + (1,) * (tf.shape(inputs).shape[0] - 1)
-            random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
-            random_tensor = tf.floor(random_tensor)
-            return (inputs / keep_prob) * random_tensor
-        return inputs
-
-    def get_config(self):
-        base_config = super().get_config()
-
-        config = {"survival_probability": self.survival_probability}
-
-        return {**base_config, **config}
-    
     
 def ConvBlock(filters,
               kernel_size,
@@ -433,8 +406,12 @@ def Transformer_Block(mlp_ratio,
 			num_heads = num_heads,
             DropOut_rate = DropOut_rate
 			)(LN_output1)
-        #pass1 = Bernoulli(att)
-        att_output = tf.keras.layers.Add()([x, att])
+        pass1 = tf.keras.layers.Dropout(
+                stochastic_depth_rate,
+                noise_shape=(None, 1, 1),
+                name="stochastic_depth_att",
+            )(att)
+        att_output = tf.keras.layers.Add()([x, pass1])
         att_output_DO = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
         
         #Feed Forward Network
@@ -446,8 +423,12 @@ def Transformer_Block(mlp_ratio,
                             mlp_ratio = mlp_ratio,
                       DropOut_rate = DropOut_rate 
 		    )(LN_output2)
-        #pass2 = Bernoulli(mlp)
-        output = tf.keras.layers.Add()([x1, mlp]) 
+        pass2 = tf.keras.layers.Dropout( #drop connect: from https://github.com/keras-team/keras/blob/v2.11.0/keras/applications/resnet_rs.py#L438
+                stochastic_depth_rate,
+                noise_shape=(None, 1, 1),
+                name="stochastic_depth_mlp",
+            )(mlp)
+        output = tf.keras.layers.Add()([x1, pass2]) 
                       
         return output
     

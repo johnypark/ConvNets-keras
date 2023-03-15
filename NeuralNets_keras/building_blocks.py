@@ -49,22 +49,16 @@ class StochasticDepth(tf.keras.layers.Layer):
         self.survival_probability = survival_probability
         
     def build(self, input_shape):
-        self.identity = tf.keras.layers.Lambda(lambda x: x)
+        self.shape = (input_shape[0],) + (1,)*(input_shape[0] - 1)
 
-
-    def call(self, inputs, training = None):
+# Referred from: github.com:rwightman/pytorch-image-models.
+    def call(self, inputs, training=None):
         if training:
-    
-        # Random bernoulli variable indicating whether the branch should be kept or not or not
-            b_out = keras.backend.random_bernoulli(
-            [], p=self.survival_probability, dtype=self._compute_dtype_object
-            )
-            return b_out * self.identity(inputs)
-
-        return self.identity(inputs)
-
-    def compute_output_shape(self, input_shape):
-        return input_shape[0]
+            keep_prob = self.survival_probability
+            random_tensor = keep_prob + tf.random.uniform(self.shape, 0, 1)
+            random_tensor = tf.floor(random_tensor)
+            return (inputs / keep_prob) * random_tensor
+        return inputs
 
     def get_config(self):
         base_config = super().get_config()

@@ -27,6 +27,7 @@ import tensorflow_addons as tfa
 import json
 from tensorflow import keras
 from einops import rearrange
+from NeuralNets_keras.utils import DropConnect
 #import tensorflow_probability as tfp
 
 #stochastic depth:
@@ -408,11 +409,12 @@ def Transformer_Block(mlp_ratio,
 			num_heads = num_heads,
             DropOut_rate = DropOut_rate
 			)(LN_output1)
-        att = tf.keras.layers.Dropout(
-                stochastic_depth_rate,
-                noise_shape=(None, 1, 1),
-                #name="stochastic_depth_att",
-            )(att) # noise_shape: (None,)+(1,)*(tf.shape(x).shape[0]-1))
+        #att = tf.keras.layers.Dropout(
+        #        stochastic_depth_rate,
+        #        noise_shape=(None, 1, 1),
+        #        #name="stochastic_depth_att",
+        #    )(att) # noise_shape: (None,)+(1,)*(tf.shape(x).shape[0]-1))
+        att = DropConnect(stochastic_depth_rate)(att)
         att_output = tf.keras.layers.Add()([x, att])
         att_output_DO = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
         
@@ -425,11 +427,12 @@ def Transformer_Block(mlp_ratio,
                             mlp_ratio = mlp_ratio,
                       DropOut_rate = DropOut_rate 
 		    )(LN_output2)
-        mlp = tf.keras.layers.Dropout( #drop connect: from https://github.com/keras-team/keras/blob/v2.11.0/keras/applications/resnet_rs.py#L438
-                stochastic_depth_rate,
-                noise_shape=(None, 1, 1),
-                #name="stochastic_depth_mlp",
-            )(mlp)
+        #mlp = tf.keras.layers.Dropout( #drop connect: from https://github.com/keras-team/keras/blob/v2.11.0/keras/applications/resnet_rs.py#L438
+        #        stochastic_depth_rate,
+        #        noise_shape=(None, 1, 1),
+        #        #name="stochastic_depth_mlp",
+        #    )(mlp)
+        mlp = DropConnect(stochastic_depth_rate)(mlp)
         output = tf.keras.layers.Add()([x1, mlp]) 
                       
         return output

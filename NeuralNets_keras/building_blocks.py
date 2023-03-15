@@ -395,6 +395,7 @@ def Transformer_Block(num_layers,
         x = inputs
         BernoulliAdd = tfa.layers.StochasticDepth(
             survival_probability = (1-stochastic_depth_rate))
+        
         for Layer in range(num_layers):
             
             att = tf.keras.layers.LayerNormalization(
@@ -417,8 +418,9 @@ def Transformer_Block(num_layers,
 		    )(mlp)
             #x = tf.keras.layers.Add()([mlp, x]) 
             mlp_output = BernoulliAdd([x1, mlp])
-            output = tf.keras.layers.Dropout(rate = DropOut_rate)(mlp_output)
-                    
+            x = tf.keras.layers.Dropout(rate = DropOut_rate)(mlp_output)
+        
+        output = x            
         return output
     
     return apply

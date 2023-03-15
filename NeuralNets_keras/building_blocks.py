@@ -405,20 +405,20 @@ def Transformer_Block(num_layers,
             DropOut_rate = DropOut_rate
 			)(att)
             #x = tf.keras.layers.Add()([x, att])
-            x = BernoulliAdd([x, att])
+            att_output = BernoulliAdd([x, att])
 
-            x = tf.keras.layers.Dropout(rate = DropOut_rate)(x)
+            x1 = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
             mlp = tf.keras.layers.LayerNormalization(
             epsilon = LayerNormEpsilon
-            )(x)
+            )(x1)
             mlp = MLP_block(embedding_dim = projection_dims,
                             mlp_ratio = mlp_ratio,
                       DropOut_rate = DropOut_rate 
 		    )(mlp)
             #x = tf.keras.layers.Add()([mlp, x]) 
-            x = BernoulliAdd([x, mlp])
+            mlp_output = BernoulliAdd([x1, mlp])
             
-            outputs = x
+            outputs = mlp_output
         
         return outputs
     return apply

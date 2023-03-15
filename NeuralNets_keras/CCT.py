@@ -38,7 +38,6 @@ def SeqPool(settings, n_attn_channel = 1):
         x = inputs    
         x = tf.keras.layers.LayerNormalization(
             epsilon = settings['epsilon'],
-            name = 'final_norm'
         )(x)
         x_init = x
         x = tf.keras.layers.Dense(units = n_attn_channel, activation = 'softmax')(x)

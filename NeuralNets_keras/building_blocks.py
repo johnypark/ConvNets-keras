@@ -411,8 +411,8 @@ def Transformer_Block(mlp_ratio,
         att = tf.keras.layers.Dropout(
                 stochastic_depth_rate,
                 noise_shape=(None, 1, 1),
-                name="stochastic_depth_att",
-            )(att)
+                #name="stochastic_depth_att",
+            )(att) # noise_shape: (None,)+(1,)*(tf.shape(x).shape[0]-1))
         att_output = tf.keras.layers.Add()([x, att])
         att_output_DO = tf.keras.layers.Dropout(rate = DropOut_rate)(att_output)
         
@@ -428,7 +428,7 @@ def Transformer_Block(mlp_ratio,
         mlp = tf.keras.layers.Dropout( #drop connect: from https://github.com/keras-team/keras/blob/v2.11.0/keras/applications/resnet_rs.py#L438
                 stochastic_depth_rate,
                 noise_shape=(None, 1, 1),
-                name="stochastic_depth_mlp",
+                #name="stochastic_depth_mlp",
             )(mlp)
         output = tf.keras.layers.Add()([x1, mlp]) 
                       
